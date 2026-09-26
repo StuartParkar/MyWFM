@@ -138,8 +138,8 @@ function assertHhMm(value: string, label: string): void {
   }
 }
 
-/** Splits a UTC instant into the local calendar date and "HH:MM" it falls on in `timezone`, with no external date library. */
-function toLocalDateTime(instantIso: string, timezone: string): { date: string; time: string } {
+/** Splits a UTC instant into the local calendar date and "HH:MM" (plus a separate `second`) it falls on in `timezone`, with no external date library. */
+function toLocalDateTime(instantIso: string, timezone: string): { date: string; time: string; second: string } {
   const instant = new Date(instantIso);
   if (Number.isNaN(instant.getTime())) {
     throw new Error(`Expected a valid ISO instant, received: "${instantIso}"`);
@@ -151,13 +151,14 @@ function toLocalDateTime(instantIso: string, timezone: string): { date: string; 
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
     hour12: false,
   }).formatToParts(instant);
   const get = (type: string): string => parts.find((p) => p.type === type)?.value ?? "";
   // Some locales/environments render midnight as "24:00" under formatToParts - normalize it
   // back to "00:00" of the same calendar day (Intl already rolled the date part forward).
   const hour = get("hour") === "24" ? "00" : get("hour");
-  return { date: `${get("year")}-${get("month")}-${get("day")}`, time: `${hour}:${get("minute")}` };
+  return { date: `${get("year")}-${get("month")}-${get("day")}`, time: `${hour}:${get("minute")}`, second: get("second") };
 }
 
 /** The calendar-date half of `toLocalDateTime`, for callers that only need the date. */
@@ -191,6 +192,38 @@ export function combineLocalDateTime(isoDate: string, hhmm: string, timezone: st
     const [shownHour, shownMinute] = shown.time.split(":").map(Number) as [number, number];
     // What the current guess actually displays as locally, encoded the same (mistreat-as-UTC) way.
     const shownMs = Date.UTC(shownYear, shownMonth - 1, shownDay, shownHour, shownMinute);
+    const nextGuess = guess + (targetMs - shownMs);
+    if (nextGuess === guess) break;
+    guess = nextGuess;
+  }
+  return new Date(guess).toISOString();
+}
+
+const HHMMSS_RE = /^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
+
+/**
+ * Same as `combineLocalDateTime`, but for callers with second-level precision to preserve -
+ * a phone system's own call timestamps, unlike a shift's StartTime/EndTime, are never rounded
+ * to the minute. Kept as its own function rather than an optional third `hhmm` segment so
+ * `combineLocalDateTime`'s existing HH:MM callers (shift boundaries) keep their stricter format
+ * check.
+ */
+export function combineLocalDateTimeSeconds(isoDate: string, hhmmss: string, timezone: string): string {
+  assertIsoDate(isoDate);
+  if (!HHMMSS_RE.test(hhmmss)) {
+    throw new Error(`Expected hhmmss as a 24-hour "HH:MM:SS" time, received: "${hhmmss}"`);
+  }
+  const [year, month, day] = isoDate.split("-").map(Number) as [number, number, number];
+  const [hour, minute, second] = hhmmss.split(":").map(Number) as [number, number, number];
+  const targetMs = Date.UTC(year, month - 1, day, hour, minute, second);
+
+  let guess = targetMs;
+  for (let i = 0; i < 2; i++) {
+    const shown = toLocalDateTime(new Date(guess).toISOString(), timezone);
+    const [shownYear, shownMonth, shownDay] = shown.date.split("-").map(Number) as [number, number, number];
+    const [shownHour, shownMinute] = shown.time.split(":").map(Number) as [number, number];
+    const shownSecond = Number(shown.second);
+    const shownMs = Date.UTC(shownYear, shownMonth - 1, shownDay, shownHour, shownMinute, shownSecond);
     const nextGuess = guess + (targetMs - shownMs);
     if (nextGuess === guess) break;
     guess = nextGuess;

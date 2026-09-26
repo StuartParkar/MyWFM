@@ -28,7 +28,7 @@ operate the migration runner.
 | `roster` | `PublishedRoster` | The official roster, versioned - one active row per employee/date (`UX_PublishedRoster_ActiveSlot` filtered unique index), same never-overwrite discipline as `config.ConfigurationSetting` |
 | `roster` | `RosterChange` | Confirmed shift/weekly-off changes outside the requirement workflow, with before/after `PublishedRoster` links |
 | `attendance` | `AttendanceSession` | Login/logout sessions (multiple per employee/business date - see `documentation/attendance.md`); First Login/Last Logout/Net Working Hours are derived on read, never stored |
-| `calls` | `QueueIntervalCall`, `AgentIntervalCall` | The universal call data model (build spec section 16) - two separate fact tables (different grains), both empty: no importer exists until real phone-system files arrive (Phase 6, paused) |
+| `calls` | `QueueIntervalCall`, `AgentIntervalCall` | The universal call data model (build spec section 16) - two separate fact tables (different grains, never summed together), one row per real call (call-detail grain - migration `0011_calls_call_detail.sql` widened the original `0009_calls.sql` shape once real files disproved the initial pre-aggregated-interval assumption). Loaded via the four Phase 6 calls importers - see `documentation/imports.md` and `imports/samples/calls/README.md` |
 | `shrinkage` | `ShrinkageCategory`, `ShrinkageEntry` | Unavailable time by category (Planned Leave, Training, Break, ...), manual entry / authorized adjustment - see `documentation/formulas.md` |
 | `formula` | `FormulaDefinition` | The Formula Library's browsable catalog - metadata only (name/description/version/effective date), never an executable expression |
 | `formula` | `CalculationLedger` | Every computed KPI value, its formula version and inputs, append-only - see `documentation/formulas.md` |
@@ -43,6 +43,16 @@ referenced as someone *else's* leader; no such column exists in the source).
 See `imports/samples/master-data/README.md` for the specific data-quality
 anomalies it handles (alias trimming, `TBA-*` vacancies, a rare multi-name
 cell, blank-vs-dash nulls).
+
+`calls.QueueIntervalCall`/`AgentIntervalCall` are loaded from four real
+phone-system exports via `npm run import:calls --workspace=backend -- <source>`
+(`backend/src/scripts/importCalls.ts`) or the Data > Import Center screen.
+Agent identity is resolved from each row's raw alias string against
+`master.Employee.AliasName` (exact match, first-token split, then
+known-suffix stripping); anything that doesn't resolve keeps the row with a
+null `AgentId` and a logged `UNRESOLVED_CALL_PARTICIPANT` data-quality issue
+rather than a guess. See `imports/samples/calls/README.md` for the specific
+data-quality anomalies each source handles.
 
 ## Running migrations
 

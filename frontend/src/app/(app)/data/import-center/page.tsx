@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card, CardBody } from "@/components/ui/Card";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface ImportRunListItem {
@@ -34,12 +34,25 @@ const STATUS_TONE: Record<string, BadgeTone> = {
   FAILED: "critical",
 };
 
+const CALLS_SOURCES: { value: string; label: string }[] = [
+  { value: "vonage-queuewise", label: "Vonage QueueWise" },
+  { value: "vonage-company-summary", label: "Vonage - Company Summary" },
+  { value: "elevate", label: "Elevate" },
+  { value: "ringcentral-calls", label: "RingCentral (agent-wise Calls sheet)" },
+];
+
 export default function ImportCenterPage() {
   const { authFetch } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
+
+  const callsFileInputRef = useRef<HTMLInputElement>(null);
+  const [callsSource, setCallsSource] = useState(CALLS_SOURCES[0]!.value);
+  const [callsUploading, setCallsUploading] = useState(false);
+  const [callsUploadError, setCallsUploadError] = useState<string | null>(null);
+  const [callsLastResult, setCallsLastResult] = useState<string | null>(null);
 
   const fetcher = useCallback(async (): Promise<AsyncResult<PaginatedResult<ImportRunListItem>>> => {
     try {
@@ -84,18 +97,56 @@ export default function ImportCenterPage() {
     }
   }
 
+  async function handleCallsFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCallsUploading(true);
+    setCallsUploadError(null);
+    setCallsLastResult(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await authFetch(`/api/calls/import/${callsSource}`, { method: "POST", body: formData });
+      const body = (await res.json()) as ApiResponse<{
+        importCode: string;
+        recordsAccepted: number;
+        recordsRejected: number;
+        queueRowsInserted: number;
+        agentRowsInserted: number;
+        dataQualityIssueCount: number;
+      }>;
+      if (!res.ok || !body.success) {
+        setCallsUploadError(!body.success ? body.error.message : "Import failed.");
+      } else {
+        setCallsLastResult(
+          `${body.data.importCode}: ${body.data.recordsAccepted} accepted, ${body.data.recordsRejected} rejected, ` +
+            `${body.data.queueRowsInserted} queue-grain row(s), ${body.data.agentRowsInserted} agent-grain row(s), ` +
+            `${body.data.dataQualityIssueCount} data quality issue(s) raised.`,
+        );
+        reload();
+      }
+    } catch {
+      setCallsUploadError("Could not reach the backend.");
+    } finally {
+      setCallsUploading(false);
+      if (callsFileInputRef.current) callsFileInputRef.current.value = "";
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-lg font-semibold text-ink">Import Center</h1>
         <p className="mt-1 text-sm text-ink-muted">
           Upload -&gt; staging -&gt; validation -&gt; normalization -&gt; duplicate check -&gt; data quality -&gt; merge (build spec
-          section 29). Currently wired for one source type - the employee/organization hierarchy - since that&rsquo;s the only
-          real source file available so far; see documentation/imports.md.
+          section 29). Wired for two source types so far - the employee/organization hierarchy and the four real
+          phone-system call exports - since those are the only real source files available so far; see
+          documentation/imports.md and documentation/phone-system-mapping.md.
         </p>
       </div>
 
       <Card>
+        <CardHeader title="Employee / Organization Hierarchy" subtitle="Tab-separated export - see imports/samples/master-data/README.md." />
         <CardBody className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
             <label>
@@ -106,6 +157,43 @@ export default function ImportCenterPage() {
           </div>
           {uploadError && <p className="text-sm text-critical">{uploadError}</p>}
           {lastResult && <p className="text-sm text-success">{lastResult}</p>}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title="Calls" subtitle="Vonage, Elevate or RingCentral export (.xlsx) - see imports/samples/calls/README.md for the exact sheet each source expects." />
+        <CardBody className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-ink-muted">Source</span>
+              <select
+                value={callsSource}
+                onChange={(e) => setCallsSource(e.target.value)}
+                disabled={callsUploading}
+                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
+              >
+                {CALLS_SOURCES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="sr-only">Upload calls file</span>
+              <input
+                ref={callsFileInputRef}
+                type="file"
+                accept=".xlsx"
+                onChange={handleCallsFileChange}
+                disabled={callsUploading}
+                className="text-sm text-ink"
+              />
+            </label>
+            {callsUploading && <span className="text-sm text-ink-muted">Uploading…</span>}
+          </div>
+          {callsUploadError && <p className="text-sm text-critical">{callsUploadError}</p>}
+          {callsLastResult && <p className="text-sm text-success">{callsLastResult}</p>}
         </CardBody>
       </Card>
 

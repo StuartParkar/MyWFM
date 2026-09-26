@@ -16,6 +16,31 @@ pipeline against the fixed sample path as a CLI convenience. Both call the
 same `backend/src/modules/imports/orgHierarchyImporter.ts` - there is only
 one implementation of this logic.
 
+## What's wired up (Phase 6): Calls
+
+Four more real source types - real phone-system call-detail exports, not
+pre-aggregated intervals (see `documentation/phone-system-mapping.md` and
+`imports/samples/calls/README.md` for the full column-by-column mapping and
+every data-quality finding that shaped it):
+
+| Source key | Phone system | Sheet expected |
+|---|---|---|
+| `vonage-queuewise` | Vonage | `Vonage QueueWise` |
+| `vonage-company-summary` | Vonage | `Vonage - Company Summary` |
+| `elevate` | Elevate | `Elevate` |
+| `ringcentral-calls` | RingCentral | `Calls` |
+
+`POST /api/calls/import/:source` (multipart `.xlsx` upload, `import.execute`
++ Data > Import Center screen) runs an uploaded file through
+`backend/src/modules/calls/callsImporter.ts` - staging, alias resolution,
+data-quality flagging, then inserting into whichever of
+`calls.QueueIntervalCall`/`calls.AgentIntervalCall` each row's grain
+requires (never both, never fabricated); `npm run import:calls
+--workspace=backend -- <source>` runs the same pipeline against the fixed
+sample path for that source as a CLI convenience. Operations > Calls reads
+the result back out (`GET /api/calls/queue-intervals`,
+`GET /api/calls/agent-intervals`).
+
 Concretely, each run:
 
 1. **Validates**: rejects rows missing Emp ID or Name (`MISSING_REQUIRED_FIELD`, HIGH).
@@ -43,12 +68,18 @@ No other source type runs through this pipeline yet. Roster (Phase 4) and
 Attendance (Phase 5) turned out not to need it at all - both are populated by
 direct data entry through their own screens (a roster requirement, a manual
 attendance session), not an uploaded file, since no real external source
-system exists for either. Calls (three phone systems) are the pipeline's
-next real candidate, but are explicitly **not** built until real sample
-files are provided - see `phone-system-mapping.md` and build spec section 76
-("do not invent columns"); the universal call *schema* it would eventually
-load into already exists (`documentation/database.md`'s `calls` schema), just
-with no importer feeding it yet. The current file-upload endpoint accepts raw
-text (`express.text()`) because TSV/CSV is what exists today; a binary format
-(e.g. Excel) will need a multipart upload (`multer`/`formidable`) added when
-a real source needs it - not before.
+system exists for either. The employee/organization hierarchy upload accepts
+raw text (`express.text()`, TSV/CSV); Calls uses a multipart upload
+(`multer`) instead, since a real phone-system export is a binary `.xlsx`
+workbook, not text - both live side by side in Import Center rather than
+one replacing the other.
+
+RingCentral's own `RingCentral` and `RingCentral - AgentWise` sheets (from
+the same workbook the four mapped sources came from) were inspected but are
+explicitly **not** mapped - one is a pre-aggregated per-agent KPI rollup
+(wrong grain for a call-detail fact table), the other is call-detail but a
+structurally different, apparently multi-row-per-call export that needs its
+own inspection pass. See `imports/samples/calls/README.md` for the full
+reasoning. Mapping them, if ever needed, follows section 76 the same way the
+four current sources did - inspect the real file first, never guess the
+columns.

@@ -62,7 +62,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Operations",
     items: [
-      { label: "Calls", path: "/operations/calls", available: false, phase: 6, description: "Universal call model across phone systems: offered/answered/abandoned, AHT, workload, service level." },
+      { label: "Calls", path: "/operations/calls", available: true, phase: 6, description: "Universal call model across phone systems: offered/answered/abandoned, AHT, workload, service level." },
       { label: "Attendance", path: "/operations/attendance", available: true, phase: 5, description: "Login/logout, net working hours, variance, late/early exceptions, on the Business Day Engine." },
       { label: "Shrinkage", path: "/operations/shrinkage", available: true, phase: 7, description: "Category-level and total shrinkage against scheduled hours." },
       { label: "Attrition", path: "/operations/attrition", available: false, phase: 7, description: "Opening/closing HC, joiners, exits, transfers, attrition rate." },

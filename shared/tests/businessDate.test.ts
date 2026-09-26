@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addDays,
   combineLocalDateTime,
+  combineLocalDateTimeSeconds,
   endOfMonth,
   resolveBusinessDate,
   resolveDateRangePreset,
@@ -133,5 +134,25 @@ describe("combineLocalDateTime", () => {
     // *following* calendar day, 26-Sep-2026.
     const scheduledEnd = combineLocalDateTime("2026-09-26", "02:00", "UTC");
     expect(resolveBusinessDate(scheduledEnd, "UTC", { endTime: "02:00", isOvernight: true })).toBe("2026-09-25");
+  });
+});
+
+describe("combineLocalDateTimeSeconds", () => {
+  it("preserves seconds, unlike combineLocalDateTime", () => {
+    expect(combineLocalDateTimeSeconds("2026-09-25", "23:59:19", "UTC")).toBe("2026-09-25T23:59:19.000Z");
+  });
+
+  it("converts US Eastern (call-detail timestamps, per the phone-system mapping)", () => {
+    // 11:59:19 PM EST (UTC-5, no DST in January) is 04:59:19 UTC the next day.
+    expect(combineLocalDateTimeSeconds("2026-01-09", "23:59:19", "America/New_York")).toBe("2026-01-10T04:59:19.000Z");
+  });
+
+  it("converts US Pacific (Elevate's timestamps, per the phone-system mapping)", () => {
+    // 23:59:24 PST (UTC-8, no DST in January) is 07:59:24 UTC the next day.
+    expect(combineLocalDateTimeSeconds("2026-01-09", "23:59:24", "America/Los_Angeles")).toBe("2026-01-10T07:59:24.000Z");
+  });
+
+  it("rejects a value without seconds", () => {
+    expect(() => combineLocalDateTimeSeconds("2026-09-25", "23:59", "UTC")).toThrow();
   });
 });

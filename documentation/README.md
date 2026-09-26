@@ -14,8 +14,8 @@
 | [`roster.md`](./roster.md) | Roster requirement/approval/publication workflow and the Change Impact Simulator |
 | [`attendance.md`](./attendance.md) | The Business Day Engine and attendance sessions/formulas |
 | [`formulas.md`](./formulas.md) | The Calculation Engine/Ledger, and Shrinkage/Staffing - the formulas real data supports today |
-| [`imports.md`](./imports.md) | Import Center - stub until Phase 3 |
-| [`phone-system-mapping.md`](./phone-system-mapping.md) | Phone-system source mappings - stub until Phase 6 |
+| [`imports.md`](./imports.md) | Import Center - the org-hierarchy and calls pipelines |
+| [`phone-system-mapping.md`](./phone-system-mapping.md) | Phone-system source mappings (Vonage, Elevate, RingCentral) |
 
 This documentation set is itself phased: a doc describes what actually exists
 in the code today, and says plainly which build-spec sections it does not

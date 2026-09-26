@@ -87,15 +87,20 @@ Build spec sections 17-19 and 21 name several more formulas. None of them are
 invented here, because each is missing a real input:
 
 - **Answer Rate, Abandon Rate, AHT, Workload, Service Level, Occupancy**
-  (sections 17-18) all need call volume - Calls (Phase 6) has only an empty
-  universal schema so far (no source files provided yet; see
-  `documentation/phone-system-mapping.md`).
+  (sections 17-18) all need call volume - real call-detail data now exists
+  (Phase 6: `calls.QueueIntervalCall`/`AgentIntervalCall`, loaded from real
+  Vonage/Elevate/RingCentral exports; see
+  `documentation/phone-system-mapping.md`), but these specific aggregate
+  formulas are not yet built against it - each is computed from many
+  individual call rows over an interval, and that aggregation logic doesn't
+  exist yet.
 - **Required Productive HC / Capacity / Capacity Utilization** (section 19)
   are the *workload-derived* half of the Staffing Engine - same blocker as
   above. The `RequiredHC` used by Roster Coverage/Staffing Gap above is the
   human-entered roster requirement value instead, which is real today.
 - **Forecast Engine** (section 21) forecasts call volume from historical call
-  volume - blocked on the same missing data.
+  volume - same blocker as above (the aggregation these formulas need isn't
+  built yet, not a lack of underlying call data anymore).
 - **Attrition** (section 22) needs employee join/leave dates, which have been
   promised but not yet provided (see the org-hierarchy import's own
   documentation) - opening/closing HC and attrition rate would otherwise be
