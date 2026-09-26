@@ -81,32 +81,118 @@ the exact `PublishedRoster.RosterRequirementId` link Phase 4's
 department/process/shift grouping, which would risk quietly disagreeing with
 what was actually published.
 
-## What's not built, and why
+## Call-derived formulas (build spec sections 17-19)
 
-Build spec sections 17-19 and 21 name several more formulas. None of them are
-invented here, because each is missing a real input:
+Aggregated per (BusinessDate, QueueId) from real `calls.QueueIntervalCall`
+rows (`backend/src/modules/calls/callMetrics.repository.ts` /
+`callMetrics.service.ts`) - deliberately daily/summary grain, not
+interval-level (interval-level Calls/AHT/Occupancy/Service Level is Phase 9's
+Intraday Control, a different screen with a different grain):
 
-- **Answer Rate, Abandon Rate, AHT, Workload, Service Level, Occupancy**
-  (sections 17-18) all need call volume - real call-detail data now exists
-  (Phase 6: `calls.QueueIntervalCall`/`AgentIntervalCall`, loaded from real
-  Vonage/Elevate/RingCentral exports; see
-  `documentation/phone-system-mapping.md`), but these specific aggregate
-  formulas are not yet built against it - each is computed from many
-  individual call rows over an interval, and that aggregation logic doesn't
-  exist yet.
-- **Required Productive HC / Capacity / Capacity Utilization** (section 19)
-  are the *workload-derived* half of the Staffing Engine - same blocker as
-  above. The `RequiredHC` used by Roster Coverage/Staffing Gap above is the
-  human-entered roster requirement value instead, which is real today.
-- **Forecast Engine** (section 21) forecasts call volume from historical call
-  volume - same blocker as above (the aggregation these formulas need isn't
-  built yet, not a lack of underlying call data anymore).
+| Formula | Code | Formula |
+|---|---|---|
+| Answer Rate % | `ANSWER_RATE_PCT` | Answered / Offered x 100 |
+| Abandon Rate % | `ABANDON_RATE_PCT` | Abandoned / Offered x 100 |
+| Average Handle Time | `AHT_SECONDS` | mean(HandleSeconds, falling back to TalkSeconds+HoldSeconds+ACWSeconds when a source doesn't report HandleSeconds directly - e.g. Vonage QueueWise) over answered calls |
+| Service Level % | `SERVICE_LEVEL_PCT` | (answered calls with WaitSeconds <= `calls.service_level_threshold_seconds`) / Offered x 100 - denominator is Offered, not Answered, the stricter common SLA definition where an abandoned call also counts against it |
+| Workload (agent-hours) | `WORKLOAD_HOURS` | Offered x AHT Seconds / 3600 |
+
+`OFFERED_CALLS`/`ANSWERED_CALLS`/`ABANDONED_CALLS` are cataloged in the
+Formula Library for documentation but, like Staffing's own RequiredHC/
+ScheduledHC/PresentHC above, aren't given their own ledger rows - they're the
+raw inputs the five ratios above are computed from, captured in each ratio's
+`InputsSnapshot` instead.
+
+A roll-up to (BusinessDate, ProcessId) is available via a second endpoint
+(`GET /api/calls/metrics/by-process`) for the workload-derived Staffing
+formulas below - it sums the raw counts across every queue sharing that
+process *first*, then computes the ratios once, never by averaging each
+queue's own already-computed percentage (mathematically wrong). A queue only
+contributes to a process roll-up once its Process is assigned in
+Admin > Queues - an auto-created queue from a Calls import starts
+unassigned, since nothing in a phone-system export says which process it
+belongs to.
+
+## Workload-derived Staffing (section 19)
+
+Computed per (BusinessDate, ProcessId) - a different grain from Roster
+Coverage/Staffing Gap's per-RosterRequirement rows above, because call
+workload doesn't know which of a process's (possibly several) shifts/
+requirements answers it (`staffing.service.ts`'s `listCapacityByProcess`,
+`GET /api/staffing/capacity`):
+
+| Formula | Code | Formula |
+|---|---|---|
+| Capacity (productive agent-hours) | `CAPACITY_HOURS` | Scheduled Hours x (1 - Shrinkage %) - using each employee's *real* scheduled shift length (the same computeScheduledWindow Attendance/Shrinkage already use), not an assumed one |
+| Required Productive HC | `REQUIRED_PRODUCTIVE_HC` | Workload Hours / (`staffing.standard_shift_hours` x (1 - Shrinkage %)) - a hypothetical "how many agents" headcount question has no real per-agent value to measure, so this one formula does use the configurable standard shift length |
+| Capacity Utilization % | `CAPACITY_UTILIZATION_PCT` | Workload Hours / Capacity Hours x 100 |
+| Occupancy % | `OCCUPANCY_PCT` | Workload Hours / (Present HC x `staffing.standard_shift_hours`) x 100 - uses the same configurable shift length rather than each present agent's real logged-in hours, which aren't wired in yet |
+
+A process with call workload but nobody published to it (or vice versa)
+reports `null` for the ratios that need the missing side, never a
+divide-by-zero or a guessed value - see `workforce/staffing`'s Capacity
+table.
+
+## Forecast Engine (section 21)
+
+`backend/src/modules/forecast/` (`GET /api/forecast`,
+`GET /api/forecast/accuracy`) - deterministic, not AI, computed entirely from
+real historical `calls.QueueIntervalCall` volume per queue:
+
+**`CALL_VOLUME_FORECAST`** = Base Forecast x Trend Factor x Seasonality
+Factor x Holiday Factor, for each requested date:
+
+- **Base Forecast**: the plain average of Offered Calls over the trailing
+  `forecast.trend_lookback_weeks` (default 4) weeks before the target date -
+  every real day in that window, any weekday.
+- **Trend Factor**: (average of the *recent* half of that same trend window)
+  / (average of its *older* half) - clamped to [0.5, 2] so a short, noisy
+  history can't extrapolate wildly. 1.0 (neutral) when there isn't enough
+  history to split meaningfully.
+- **Seasonality Factor**: (average Offered Calls on the target's specific
+  weekday, over the trailing `forecast.seasonality_lookback_weeks` (default
+  8) weeks) / (average over *all* weekdays in that same window) - how much
+  busier or quieter this weekday is than an average day.
+- **Holiday Factor**: `forecast.holiday_volume_factor` (default **1**,
+  neutral) when the target date is a `master.Holiday` date, else 1. Left
+  neutral rather than assuming a direction - most call centers see less
+  volume on a holiday, but a travel BPO plausibly sees *more* around one, and
+  there isn't yet enough real multi-holiday history to measure which. Revisit
+  once there is.
+
+A date with no real history strictly before it (a brand-new queue, or a
+queue whose only imported sample rows are all on or after that date) reports
+every factor and the forecast itself as `null` - "insufficient history," not
+a fabricated number.
+
+**`FORECAST_MAE`/`FORECAST_MAPE`/`FORECAST_BIAS`**: accuracy, computed by
+comparing each date's forecast - built only from history strictly before
+it, exactly what a real forecast would have seen in advance - against that
+date's real actual, wherever both exist in the requested range:
+
+- MAE = mean(|Forecast - Actual|)
+- MAPE = mean(|Forecast - Actual| / Actual) x 100 (days with Actual = 0
+  excluded, division by zero)
+- Bias = mean(Forecast - Actual) - positive means the engine over-forecasts
+
+With the real sample call data imported so far (a handful of non-contiguous
+real dates per source - see `imports/samples/calls/README.md`), most
+forecast requests will honestly report insufficient history. That's
+expected, not a bug - the engine gets more useful precisely as more real
+call history accumulates, not before.
+
+## What's still not built, and why
+
 - **Attrition** (section 22) needs employee join/leave dates, which have been
   promised but not yet provided (see the org-hierarchy import's own
   documentation) - opening/closing HC and attrition rate would otherwise be
   guessed at.
+- **Interval-level** Calls/AHT/Occupancy/Service Level (as opposed to the
+  daily/summary versions above) is Intraday Control, Phase 9 - a genuinely
+  different grain and screen, not an oversight here.
 
-Each of these gets built the moment its real input exists, not before.
+Each of these gets built the moment its real input (or its phase) arrives,
+not before.
 
 ## Screens
 
@@ -114,4 +200,6 @@ Each of these gets built the moment its real input exists, not before.
 |---|---|---|
 | Formula Library | `/admin/formula-library` | `formula.view` |
 | Shrinkage | `/operations/shrinkage` | `shrinkage.view` to see, `shrinkage.manage` to record/adjust/remove |
-| Staffing | `/workforce/staffing` | `staffing.view` |
+| Staffing (Coverage + Capacity) | `/workforce/staffing` | `staffing.view` |
+| Forecast | `/workforce/forecast` | `forecast.view` |
+| Admin > Queues (Process assignment) | `/admin/queues` | `masterdata.view` to see, `masterdata.manage` to assign a Process |

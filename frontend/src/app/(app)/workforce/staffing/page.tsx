@@ -28,6 +28,21 @@ interface IdNameRow {
   name: string;
 }
 
+interface CapacityRow {
+  businessDate: string;
+  processId: number;
+  processName: string | null;
+  scheduledHC: number;
+  presentHC: number;
+  scheduledHours: number;
+  shrinkagePct: number | null;
+  workloadHours: number;
+  requiredProductiveHC: number | null;
+  capacityHours: number;
+  capacityUtilizationPct: number | null;
+  occupancyPct: number | null;
+}
+
 function toIsoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
@@ -82,15 +97,30 @@ export default function StaffingPage() {
   }, [authFetch, range, departmentId, processId, page]);
   const { data: result, error, loading, reload } = useAsyncResource(fetcher, [range, departmentId, processId, page]);
 
+  const capacityFetcher = useCallback(async (): Promise<AsyncResult<CapacityRow[]>> => {
+    try {
+      const params = new URLSearchParams({ from: range.from, to: range.to });
+      if (processId) params.set("processId", processId);
+      const res = await authFetch(`/api/staffing/capacity?${params}`);
+      const body = (await res.json()) as ApiResponse<CapacityRow[]>;
+      if (!res.ok || !body.success) return { ok: false, message: !body.success ? body.error.message : `Request failed (${res.status})` };
+      return { ok: true, data: body.data };
+    } catch {
+      return { ok: false, message: "Could not reach the backend." };
+    }
+  }, [authFetch, range, processId]);
+  const { data: capacity, error: capacityError, loading: capacityLoading, reload: reloadCapacity } = useAsyncResource(capacityFetcher, [range, processId]);
+
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-lg font-semibold text-ink">Staffing</h1>
         <p className="mt-1 text-sm text-ink-muted">
           Roster Coverage, Staffing Gap and Actual Staffing Gap (build spec section 19) against each published roster
-          requirement&apos;s own Required HC. Capacity and Capacity Utilization are not shown - both need
-          Workload derived from call volume, which stays unbuilt until Calls has real data (see
-          documentation/formulas.md).
+          requirement&apos;s own Required HC. Required Productive HC/Capacity/Capacity Utilization/Occupancy below are
+          the workload-derived half of the engine, computed per process/day from real Calls volume - a process only
+          appears there once at least one of its queues has a Process assigned (Admin &gt; Queues) and has had a
+          published roster requirement in range. See documentation/formulas.md.
         </p>
       </div>
 
@@ -164,6 +194,61 @@ export default function StaffingPage() {
             </div>
           </div>
         </>
+      )}
+
+      <div>
+        <h2 className="text-base font-semibold text-ink">Capacity (workload-derived, per process/day)</h2>
+      </div>
+
+      {capacityLoading && <LoadingState label="Loading capacity" />}
+      {!capacityLoading && capacityError && <ErrorState message={capacityError} onRetry={reloadCapacity} />}
+      {!capacityLoading && !capacityError && capacity?.length === 0 && (
+        <EmptyState
+          title="No process has both call volume and a published requirement in this range"
+          description="Assign each queue's Process in Admin > Queues, and make sure a roster requirement is published for that process/date, to see Capacity here."
+        />
+      )}
+      {!capacityLoading && !capacityError && capacity && capacity.length > 0 && (
+        <Card className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-faint">
+                <th className="px-4 py-3 font-medium">Date</th>
+                <th className="px-4 py-3 font-medium">Process</th>
+                <th className="px-4 py-3 font-medium">Scheduled</th>
+                <th className="px-4 py-3 font-medium">Present</th>
+                <th className="px-4 py-3 font-medium">Shrinkage</th>
+                <th className="px-4 py-3 font-medium">Workload (hrs)</th>
+                <th className="px-4 py-3 font-medium">Required Productive HC</th>
+                <th className="px-4 py-3 font-medium">Capacity (hrs)</th>
+                <th className="px-4 py-3 font-medium">Capacity Utilization</th>
+                <th className="px-4 py-3 font-medium">Occupancy</th>
+              </tr>
+            </thead>
+            <tbody>
+              {capacity.map((c) => (
+                <tr key={`${c.businessDate}|${c.processId}`} className="border-b border-line last:border-0">
+                  <td className="px-4 py-3 text-ink">{c.businessDate}</td>
+                  <td className="px-4 py-3 text-ink-muted">{c.processName ?? "—"}</td>
+                  <td className="px-4 py-3 text-ink tabular-nums">{c.scheduledHC}</td>
+                  <td className="px-4 py-3 text-ink tabular-nums">{c.presentHC}</td>
+                  <td className="px-4 py-3 text-ink-muted tabular-nums">{c.shrinkagePct != null ? `${c.shrinkagePct}%` : "—"}</td>
+                  <td className="px-4 py-3 text-ink tabular-nums">{c.workloadHours}</td>
+                  <td className="px-4 py-3 text-ink tabular-nums">{c.requiredProductiveHC ?? "—"}</td>
+                  <td className="px-4 py-3 text-ink tabular-nums">{c.capacityHours}</td>
+                  <td className="px-4 py-3">
+                    {c.capacityUtilizationPct != null ? (
+                      <Badge tone={c.capacityUtilizationPct > 100 ? "critical" : c.capacityUtilizationPct > 85 ? "warning" : "success"}>{c.capacityUtilizationPct}%</Badge>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-ink-muted tabular-nums">{c.occupancyPct != null ? `${c.occupancyPct}%` : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
       )}
     </div>
   );

@@ -6,7 +6,8 @@ import { requirePermission } from "../../middleware/rbac.js";
 import { ValidationError } from "../../errors/AppError.js";
 import { isCallsSource, importCallsFile } from "./callsImporter.js";
 import * as repo from "./calls.repository.js";
-import { agentIntervalQuerySchema, queueIntervalQuerySchema } from "./calls.validation.js";
+import * as metrics from "./callMetrics.service.js";
+import { agentIntervalQuerySchema, callMetricsByProcessQuerySchema, callMetricsByQueueQuerySchema, queueIntervalQuerySchema } from "./calls.validation.js";
 
 export const callsRouter = Router();
 
@@ -21,6 +22,18 @@ callsRouter.get("/queue-intervals", async (req, res) => {
 callsRouter.get("/agent-intervals", async (req, res) => {
   const input = agentIntervalQuerySchema.parse(req.query);
   const result = await repo.listAgentIntervals(input);
+  res.json({ success: true, data: result } satisfies ApiSuccess<typeof result>);
+});
+
+callsRouter.get("/metrics/by-queue", async (req, res) => {
+  const input = callMetricsByQueueQuerySchema.parse(req.query);
+  const result = await metrics.listByQueue({ ...input, computedByUserId: req.user!.userId });
+  res.json({ success: true, data: result } satisfies ApiSuccess<typeof result>);
+});
+
+callsRouter.get("/metrics/by-process", async (req, res) => {
+  const input = callMetricsByProcessQuerySchema.parse(req.query);
+  const result = await metrics.listByProcess({ ...input, computedByUserId: req.user!.userId });
   res.json({ success: true, data: result } satisfies ApiSuccess<typeof result>);
 });
 

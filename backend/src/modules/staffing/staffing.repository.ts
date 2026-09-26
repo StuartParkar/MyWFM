@@ -1,6 +1,119 @@
 import type { PaginatedResult } from "@mywfm/shared";
 import { getPool, sql } from "../../db/pool.js";
 
+export interface ProcessScheduleKeyRow {
+  employeeId: string;
+  businessDate: string;
+  processId: number;
+  processName: string | null;
+  shiftId: number | null;
+  startTime: string | null;
+  endTime: string | null;
+  isOvernight: boolean | null;
+  isWeeklyOff: boolean;
+}
+
+/**
+ * Row-level (one per scheduled employee/day), not pre-aggregated: computing real scheduled
+ * minutes needs computeScheduledWindow's timezone-aware date math (attendance.service.ts),
+ * which SQL can't do - the caller aggregates these into Scheduled HC/minutes per
+ * (businessDate, processId) itself, same division of labor as shrinkage.repository.ts's
+ * listScheduleAndShrinkageDays feeding attendance.service.ts's computeScheduledWindow.
+ */
+export async function listPublishedRosterKeysByProcess(params: { from: string; to: string; processId?: number }): Promise<ProcessScheduleKeyRow[]> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("From", sql.Date, params.from)
+    .input("To", sql.Date, params.to)
+    .input("ProcessId", sql.Int, params.processId ?? null)
+    .query<{
+      EmployeeId: string;
+      BusinessDate: string;
+      ProcessId: number;
+      ProcessName: string | null;
+      ShiftId: number | null;
+      StartTime: string | null;
+      EndTime: string | null;
+      IsOvernight: boolean | null;
+      IsWeeklyOff: boolean;
+    }>(`
+      SELECT
+        pr.EmployeeId, CONVERT(VARCHAR(10), pr.BusinessDate, 23) AS BusinessDate, rr.ProcessId, proc.ProcessName,
+        pr.ShiftId, CONVERT(VARCHAR(5), sh.StartTime, 108) AS StartTime, CONVERT(VARCHAR(5), sh.EndTime, 108) AS EndTime,
+        sh.IsOvernight, pr.IsWeeklyOff
+      FROM [roster].PublishedRoster pr
+      JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
+      JOIN [master].Process proc ON proc.ProcessId = rr.ProcessId
+      LEFT JOIN [master].Shift sh ON sh.ShiftId = pr.ShiftId
+      WHERE pr.IsActive = 1 AND pr.BusinessDate BETWEEN @From AND @To
+        AND (@ProcessId IS NULL OR rr.ProcessId = @ProcessId)
+    `);
+  return result.recordset.map((r) => ({
+    employeeId: r.EmployeeId,
+    businessDate: r.BusinessDate,
+    processId: r.ProcessId,
+    processName: r.ProcessName,
+    shiftId: r.ShiftId,
+    startTime: r.StartTime,
+    endTime: r.EndTime,
+    isOvernight: r.IsOvernight,
+    isWeeklyOff: r.IsWeeklyOff,
+  }));
+}
+
+export interface ProcessPresentCountRow {
+  businessDate: string;
+  processId: number;
+  presentHC: number;
+}
+
+export async function listPresentCountByProcess(params: { from: string; to: string; processId?: number }): Promise<ProcessPresentCountRow[]> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("From", sql.Date, params.from)
+    .input("To", sql.Date, params.to)
+    .input("ProcessId", sql.Int, params.processId ?? null)
+    .query<{ BusinessDate: string; ProcessId: number; PresentHC: number }>(`
+      SELECT CONVERT(VARCHAR(10), pr.BusinessDate, 23) AS BusinessDate, rr.ProcessId,
+             COUNT(DISTINCT pr.EmployeeId) AS PresentHC
+      FROM [roster].PublishedRoster pr
+      JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
+      JOIN [attendance].AttendanceSession att ON att.EmployeeId = pr.EmployeeId AND att.BusinessDate = pr.BusinessDate
+      WHERE pr.IsActive = 1 AND pr.BusinessDate BETWEEN @From AND @To
+        AND (@ProcessId IS NULL OR rr.ProcessId = @ProcessId)
+      GROUP BY pr.BusinessDate, rr.ProcessId
+    `);
+  return result.recordset.map((r) => ({ businessDate: r.BusinessDate, processId: r.ProcessId, presentHC: r.PresentHC }));
+}
+
+export interface ProcessShrinkageMinutesRow {
+  businessDate: string;
+  processId: number;
+  shrinkageMinutes: number;
+}
+
+export async function listShrinkageMinutesByProcess(params: { from: string; to: string; processId?: number }): Promise<ProcessShrinkageMinutesRow[]> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("From", sql.Date, params.from)
+    .input("To", sql.Date, params.to)
+    .input("ProcessId", sql.Int, params.processId ?? null)
+    .query<{ BusinessDate: string; ProcessId: number; ShrinkageMinutes: number }>(`
+      SELECT CONVERT(VARCHAR(10), pr.BusinessDate, 23) AS BusinessDate, rr.ProcessId,
+             SUM(se.Minutes) AS ShrinkageMinutes
+      FROM [shrinkage].ShrinkageEntry se
+      JOIN [roster].PublishedRoster pr ON pr.EmployeeId = se.EmployeeId AND pr.BusinessDate = se.BusinessDate AND pr.IsActive = 1
+      JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
+      WHERE se.BusinessDate BETWEEN @From AND @To
+        AND (@ProcessId IS NULL OR rr.ProcessId = @ProcessId)
+      GROUP BY pr.BusinessDate, rr.ProcessId
+    `);
+  return result.recordset.map((r) => ({ businessDate: r.BusinessDate, processId: r.ProcessId, shrinkageMinutes: r.ShrinkageMinutes }));
+}
+
 export interface RequirementCoverageRow {
   rosterRequirementId: number;
   businessDate: string;

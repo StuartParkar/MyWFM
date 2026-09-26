@@ -48,3 +48,7 @@ export const createHolidaySchema = z.object({
 export const idParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
+
+export const setQueueProcessSchema = z.object({
+  processId: z.number().int().positive().nullable(),
+});

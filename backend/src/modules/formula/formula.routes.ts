@@ -18,6 +18,8 @@ const ledgerQuerySchema = z.object({
   formulaCode: z.string().max(50).optional(),
   entityType: z.string().max(50).optional(),
   entityId: z.string().max(100).optional(),
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(200).default(50),
 });

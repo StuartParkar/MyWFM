@@ -33,7 +33,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Workforce",
     items: [
       { label: "Workforce Planning", path: "/workforce/planning", available: false, phase: 10, description: "Current/required/future HC, hiring gap, by month/department/process/location/designation." },
-      { label: "Forecast", path: "/workforce/forecast", available: false, phase: 7, description: "Deterministic forecast engine: base forecast x trend x seasonality x holiday, with accuracy/MAE/MAPE/bias." },
+      { label: "Forecast", path: "/workforce/forecast", available: true, phase: 7, description: "Deterministic forecast engine: base forecast x trend x seasonality x holiday, with accuracy/MAE/MAPE/bias." },
       { label: "Staffing", path: "/workforce/staffing", available: true, phase: 7, description: "Required/scheduled/actual staffing gap, coverage and capacity utilization." },
       { label: "Scenarios", path: "/workforce/scenarios", available: false, phase: 10, description: "What-if scenario planning (volume/AHT/shrinkage/HC changes) that never touches live data." },
     ],
@@ -71,14 +71,14 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Reports",
     items: [
-      { label: "Workforce", path: "/reports/workforce", available: false, phase: 8, description: "HC, required HC, staffing gap, capacity, utilization reporting with period comparison." },
-      { label: "Calls", path: "/reports/calls", available: false, phase: 8, description: "Offered/answered/abandoned/AHT/service level/occupancy reporting with period comparison." },
-      { label: "Attendance", path: "/reports/attendance", available: false, phase: 8, description: "Attendance, hours, variance, late/early/absence reporting with period comparison." },
-      { label: "Staffing", path: "/reports/staffing", available: false, phase: 8, description: "Staffing gap and coverage reporting with period comparison." },
-      { label: "Forecast", path: "/reports/forecast", available: false, phase: 8, description: "Forecast vs. actual, accuracy, MAE, MAPE, bias reporting." },
-      { label: "Roster", path: "/reports/roster", available: false, phase: 8, description: "Roster coverage, requirement vs. published, and version history reporting." },
-      { label: "Exceptions", path: "/reports/exceptions", available: false, phase: 8, description: "Exception volume and resolution reporting across every exception category." },
-      { label: "Custom Reports", path: "/reports/custom", available: false, phase: 8, description: "Ad-hoc report building against the Calculation Ledger." },
+      { label: "Workforce", path: "/reports/workforce", available: true, phase: 8, description: "HC, required HC, staffing gap, capacity, utilization reporting with period comparison." },
+      { label: "Calls", path: "/reports/calls", available: true, phase: 8, description: "Offered/answered/abandoned/AHT/service level/occupancy reporting with period comparison." },
+      { label: "Attendance", path: "/reports/attendance", available: true, phase: 8, description: "Attendance, hours, variance, late/early/absence reporting with period comparison." },
+      { label: "Staffing", path: "/reports/staffing", available: true, phase: 8, description: "Staffing gap and coverage reporting with period comparison." },
+      { label: "Forecast", path: "/reports/forecast", available: true, phase: 8, description: "Forecast vs. actual, accuracy, MAE, MAPE, bias reporting." },
+      { label: "Roster", path: "/reports/roster", available: true, phase: 8, description: "Roster coverage, requirement vs. published, and version history reporting." },
+      { label: "Exceptions", path: "/reports/exceptions", available: false, phase: 9, description: "Exception volume and resolution reporting across every exception category - waits on Phase 9's exception engine; there is nothing real to report before it exists." },
+      { label: "Custom Reports", path: "/reports/custom", available: true, phase: 8, description: "Ad-hoc report building against the Calculation Ledger." },
     ],
   },
   {

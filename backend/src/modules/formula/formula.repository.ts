@@ -59,6 +59,8 @@ export async function listCalculationHistory(params: {
   formulaCode?: string;
   entityType?: string;
   entityId?: string;
+  from?: string;
+  to?: string;
   page: number;
   pageSize: number;
 }): Promise<PaginatedResult<CalculationLedgerRow>> {
@@ -69,6 +71,8 @@ export async function listCalculationHistory(params: {
     .input("FormulaCode", sql.VarChar(50), params.formulaCode ?? null)
     .input("EntityType", sql.VarChar(50), params.entityType ?? null)
     .input("EntityId", sql.VarChar(100), params.entityId ?? null)
+    .input("From", sql.Date, params.from ?? null)
+    .input("To", sql.Date, params.to ?? null)
     .input("Offset", sql.Int, offset)
     .input("PageSize", sql.Int, params.pageSize)
     .query<{
@@ -90,6 +94,8 @@ export async function listCalculationHistory(params: {
       WHERE (@FormulaCode IS NULL OR FormulaCode = @FormulaCode)
         AND (@EntityType IS NULL OR EntityType = @EntityType)
         AND (@EntityId IS NULL OR EntityId = @EntityId)
+        AND (@From IS NULL OR BusinessDate >= @From)
+        AND (@To IS NULL OR BusinessDate <= @To)
       ORDER BY ComputedAt DESC
       OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
     `);

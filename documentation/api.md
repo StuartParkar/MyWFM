@@ -11,7 +11,7 @@ Base path: `/api`. Every response is one of the two shapes in
 `errorId` correlates to a server-side log line with full technical detail -
 never expect (or parse) more detail from the response body itself.
 
-## Endpoints (Phases 1-7)
+## Endpoints (Phases 1-8)
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
@@ -59,6 +59,8 @@ never expect (or parse) more detail from the response body itself.
 | GET | `/api/calls/queue-intervals` | bearer + `calls.view` | `?from=&to=&queueId=`, paginated - queue-grain call-detail rows, see `documentation/phone-system-mapping.md` |
 | GET | `/api/calls/agent-intervals` | bearer + `calls.view` | `?from=&to=&agentId=&queueId=`, paginated - agent-grain call-detail rows |
 | POST | `/api/calls/import/:source` | bearer + `import.execute` | Multipart `.xlsx` upload (field `file`) - `:source` is one of `vonage-queuewise`, `vonage-company-summary`, `elevate`, `ringcentral-calls` |
+| GET | `/api/calls/metrics/by-queue` | bearer + `calls.view` | `?from=&to=&queueId=` - Answer/Abandon Rate %, AHT, Service Level %, Workload Hours per (BusinessDate, Queue) |
+| GET | `/api/calls/metrics/by-process` | bearer + `calls.view` | `?from=&to=&processId=` - same, rolled up to (BusinessDate, Process); only includes queues with a Process assigned (Admin > Queues) |
 | GET | `/api/shrinkage/categories` | bearer + `shrinkage.view` | The seeded category list (Planned Leave, Training, Break, ...) |
 | GET | `/api/shrinkage` | bearer + `shrinkage.view` | Paginated daily shrinkage summaries, `?from=&to=&employeeId=` (`from`/`to` required) |
 | GET | `/api/shrinkage/entries` | bearer + `shrinkage.view` | `?employeeId=&businessDate=` (both required) - raw entries for one employee/day |
@@ -66,8 +68,13 @@ never expect (or parse) more detail from the response body itself.
 | PATCH | `/api/shrinkage/entries/:id` | bearer + `shrinkage.manage` | Adjustment: `{ minutes?, shrinkageCategoryId?, notes?, reason }` - `reason` is mandatory |
 | DELETE | `/api/shrinkage/entries/:id` | bearer + `shrinkage.manage` | Body `{ reason }` - `reason` is mandatory |
 | GET | `/api/staffing/coverage` | bearer + `staffing.view` | Paginated, `?from=&to=&departmentId=&processId=` (`from`/`to` required) - per published roster requirement |
+| GET | `/api/staffing/capacity` | bearer + `staffing.view` | `?from=&to=&processId=` - Required Productive HC/Capacity Hours/Capacity Utilization %/Occupancy % per (BusinessDate, Process) |
+| GET | `/api/forecast` | bearer + `forecast.view` | `?from=&to=&queueId=` - the deterministic call-volume forecast per (BusinessDate, Queue); a date with insufficient real history reports `null` factors, never a guess |
+| GET | `/api/forecast/accuracy` | bearer + `forecast.view` | `?from=&to=&queueId=` - MAE/MAPE/Bias comparing each date's forecast against its real actual, wherever both exist |
+| GET | `/api/control-tower/summary` | bearer + `controltower.view` | `?from=&to=&processId=&hodId=&tlId=&agentSeniorId=&designationCode=` - the Control Tower's 12 KPIs; see `documentation/controltower.md` for which respect the full filter cascade |
 | GET | `/api/formulas` | bearer + `formula.view` | The active Formula Library catalog |
-| GET | `/api/formulas/ledger` | bearer + `formula.view` | Paginated, `?formulaCode=&entityType=&entityId=` - the Calculation Ledger, newest first |
+| GET | `/api/formulas/ledger` | bearer + `formula.view` | Paginated, `?formulaCode=&entityType=&entityId=&from=&to=` - the Calculation Ledger, newest first |
+| PATCH | `/api/master-data/queues/:id/process` | bearer + `masterdata.manage` | Body `{ processId: number \| null }` - assigns/clears a queue's Process, needed for Calls workload to attribute to a Staffing process |
 
 Every future module's endpoints follow the
 same envelope, auth (`requireAuth`), authorization

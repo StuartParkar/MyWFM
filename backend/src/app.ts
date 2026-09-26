@@ -22,6 +22,8 @@ import { callsRouter } from "./modules/calls/calls.routes.js";
 import { shrinkageRouter } from "./modules/shrinkage/shrinkage.routes.js";
 import { staffingRouter } from "./modules/staffing/staffing.routes.js";
 import { formulaRouter } from "./modules/formula/formula.routes.js";
+import { forecastRouter } from "./modules/forecast/forecast.routes.js";
+import { controlTowerRouter } from "./modules/controlTower/controlTower.routes.js";
 
 export function createApp() {
   const app = express();
@@ -56,6 +58,8 @@ export function createApp() {
   app.use("/api/shrinkage", shrinkageRouter);
   app.use("/api/staffing", staffingRouter);
   app.use("/api/formulas", formulaRouter);
+  app.use("/api/forecast", forecastRouter);
+  app.use("/api/control-tower", controlTowerRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

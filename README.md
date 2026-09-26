@@ -80,20 +80,33 @@ Phase N" screen instead of a fake one
       result. RingCentral's own `RingCentral`/`RingCentral - AgentWise`
       sheets were inspected but not mapped (wrong grain / unmapped format -
       see the calls README) and remain future work if needed.
-- [x] **Phase 7 - Calculation engine & formulas (partial - only what real data
-      supports)**: a versioned Formula Library (metadata catalog, not a
-      runtime expression language) and an append-only Calculation Ledger
-      (build spec sections 32-33), plus the two formula groups real data
-      already exists for - Shrinkage % (manual entry, same pattern as
-      Attendance) and Staffing (Roster Coverage %, Staffing Gap, Actual
-      Staffing Gap, computed per *published* roster requirement against its
-      own human-entered Required HC). Answer Rate/AHT/Workload/Service Level/
-      Occupancy/Required Productive HC/Capacity Utilization and the Forecast
-      Engine all need call volume - real call data now exists (Phase 6,
-      above), but these specific formulas are not yet built against it;
-      Attrition needs employee join/leave dates, promised but not yet
-      provided. See `documentation/formulas.md`.
-- [ ] **Phase 8 - Control Tower**: reports, filters, drilldowns, Explain This Number.
+- [x] **Phase 7 - Calculation engine & formulas**: a versioned Formula Library
+      (metadata catalog, not a runtime expression language) and an
+      append-only Calculation Ledger (build spec sections 32-33). Shrinkage %
+      and Staffing (Roster Coverage %, Staffing Gap, Actual Staffing Gap) from
+      Phase 5/4 data, plus every call-derived formula sections 17-19 name -
+      Answer Rate, Abandon Rate, AHT, Service Level, Workload, and the
+      workload-derived half of Staffing (Required Productive HC, Capacity,
+      Capacity Utilization, Occupancy) - now that Phase 6 provides real call
+      volume. The Forecast Engine (section 21: Base Forecast x Trend Factor x
+      Seasonality Factor x Holiday Factor, deterministic, not AI) is built and
+      live at `/workforce/forecast`, honestly reporting "insufficient
+      history" rather than a guess wherever the real imported call history
+      doesn't yet cover a date. Attrition still needs employee join/leave
+      dates, promised but not yet provided. See `documentation/formulas.md`.
+- [x] **Phase 8 - Control Tower & reporting**: the Control Tower's 12 KPI
+      cards (`/control-tower`) replace Phase 1's all-dashes placeholder,
+      computed company-wide against the Global Filter Bar's date range +
+      Process (nine of them) or the full HOD/TL/Agent-Senior/Designation
+      cascade (Present HC, Attendance %, Shrinkage % - the three that are
+      genuinely per-employee facts; see `documentation/controltower.md` for
+      why the other nine don't support that same cascade). "Explain This
+      Number" drills into the real Calculation Ledger entries behind any
+      derived KPI. Six Reports screens (Workforce/Calls/Attendance/Staffing/
+      Forecast/Roster) add period-over-period comparison on top of the same
+      real endpoints; Custom Reports is an ad-hoc Calculation Ledger query
+      tool. Reports > Exceptions stays unavailable - there is no exception
+      engine yet to report on (Phase 9).
 - [ ] **Phase 9 - Intraday**: exceptions, action tracker, break management, OT/VTO.
 - [ ] **Phase 10 - Workforce & scenario planning**.
 - [ ] **Phase 11 - Audit/lineage**: reprocessing, system health history, backup/restore automation.

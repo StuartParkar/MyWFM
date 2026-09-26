@@ -50,7 +50,8 @@ export const PERMISSION_CODES = [
   "attendance.view",
   "attendance.manage",
 
-  // Calls (Phase 6) - view-only: no importer exists yet to gate a manage permission against.
+  // Calls (Phase 6) - view-only: importers are gated by import.execute above, not a separate
+  // calls.manage, since "manage" here would just mean "upload," already covered there.
   "calls.view",
 
   // Calculation engine & formulas (Phase 7)
@@ -58,6 +59,13 @@ export const PERMISSION_CODES = [
   "shrinkage.manage",
   "staffing.view",
   "formula.view",
+  "forecast.view",
+
+  // Control Tower (Phase 8). Reports has no separate permission of its own: every Reports
+  // screen reuses an already-gated endpoint (calls/staffing/forecast/control-tower/roster/
+  // attendance), so a decorative reports.view nothing ever checked would be exactly the kind
+  // of non-authoritative, client-side-only control build spec section 43 rules out.
+  "controltower.view",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];

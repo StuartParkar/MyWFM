@@ -54,7 +54,9 @@ USING (VALUES
     ('shrinkage.view',      'shrinkage', 'View shrinkage entries and derived shrinkage percentages.'),
     ('shrinkage.manage',    'shrinkage', 'Record or adjust shrinkage entries.'),
     ('staffing.view',       'staffing', 'View roster coverage, staffing gap and actual staffing gap.'),
-    ('formula.view',        'formula', 'Browse the Formula Library and the Calculation Ledger.')
+    ('formula.view',        'formula', 'Browse the Formula Library and the Calculation Ledger.'),
+    ('forecast.view',       'forecast', 'View the deterministic call-volume Forecast Engine and its accuracy (MAE/MAPE/Bias).'),
+    ('controltower.view',   'controltower', 'View the company-wide Control Tower dashboard and Explain This Number drilldown.')
 ) AS source (PermissionCode, ModuleName, Description)
 ON target.PermissionCode = source.PermissionCode
 WHEN MATCHED THEN
@@ -80,7 +82,8 @@ USING (
             'user.view', 'config.view', 'audit.view', 'system.health.view', 'job.view', 'job.manage',
             'masterdata.view', 'import.view', 'import.execute', 'dataquality.view',
             'roster.view', 'roster.review.wfm', 'roster.change', 'attendance.view', 'attendance.manage', 'calls.view',
-            'shrinkage.view', 'shrinkage.manage', 'staffing.view', 'formula.view'
+            'shrinkage.view', 'shrinkage.manage', 'staffing.view', 'formula.view',
+            'forecast.view', 'controltower.view'
         )
     WHERE r.RoleCode = 'WFM'
 
@@ -89,7 +92,7 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.hod', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view')
+        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.hod', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view', 'forecast.view', 'controltower.view')
     WHERE r.RoleCode = 'HOD'
 
     UNION ALL
@@ -97,7 +100,7 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.leader', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view')
+        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.leader', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view', 'forecast.view', 'controltower.view')
     WHERE r.RoleCode = 'LEADER'
 
     UNION ALL

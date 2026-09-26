@@ -12,6 +12,14 @@ interface QueueRow {
   id: number;
   code: string;
   name: string;
+  processId: number | null;
+  processName: string | null;
+}
+
+interface ProcessOption {
+  id: number;
+  code: string;
+  name: string;
 }
 
 export default function QueuesPage() {
@@ -33,6 +41,27 @@ export default function QueuesPage() {
   }, [authFetch]);
 
   const { data: queues, error, loading, reload } = useAsyncResource(fetcher);
+
+  const processesFetcher = useCallback(async (): Promise<AsyncResult<ProcessOption[]>> => {
+    try {
+      const res = await authFetch("/api/master-data/processes");
+      const body = (await res.json()) as ApiResponse<ProcessOption[]>;
+      if (!res.ok || !body.success) return { ok: false, message: !body.success ? body.error.message : `Request failed (${res.status})` };
+      return { ok: true, data: body.data };
+    } catch {
+      return { ok: false, message: "Could not reach the backend." };
+    }
+  }, [authFetch]);
+  const { data: processes } = useAsyncResource(processesFetcher);
+
+  async function handleSetProcess(queueId: number, value: string) {
+    await authFetch(`/api/master-data/queues/${queueId}/process`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ processId: value ? Number(value) : null }),
+    });
+    reload();
+  }
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -64,7 +93,10 @@ export default function QueuesPage() {
       <div>
         <h1 className="text-lg font-semibold text-ink">Queues</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Queue master data - used by staffing/coverage calculations once Phase 6/7 land.
+          Queue master data. Assign each queue&rsquo;s Process below to attribute its real call
+          volume to a roster requirement&rsquo;s Required Productive HC/Capacity/Occupancy (build
+          spec section 19) - a queue created by a Calls import starts with no Process, since
+          nothing in a phone-system export says which process it belongs to.
         </p>
       </div>
 
@@ -112,6 +144,7 @@ export default function QueuesPage() {
               <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-faint">
                 <th className="px-4 py-3 font-medium">Code</th>
                 <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Process</th>
                 <th className="px-4 py-3 font-medium" />
               </tr>
             </thead>
@@ -120,6 +153,20 @@ export default function QueuesPage() {
                 <tr key={q.id} className="border-b border-line last:border-0">
                   <td className="px-4 py-3 text-ink-muted">{q.code}</td>
                   <td className="px-4 py-3 text-ink">{q.name}</td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={q.processId ?? ""}
+                      onChange={(e) => handleSetProcess(q.id, e.target.value)}
+                      className="rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink"
+                    >
+                      <option value="">Unassigned</option>
+                      {processes?.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="px-4 py-3">
                     <Button variant="ghost" onClick={() => handleRemove(q.id)}>
                       Remove

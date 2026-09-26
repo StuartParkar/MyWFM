@@ -97,8 +97,38 @@ async function listCodeNameLookup(table: string, idCol: string, codeCol: string,
 
 export const listLocations = () => listCodeNameLookup("Location", "LocationId", "LocationCode", "LocationName");
 export const listProcesses = () => listCodeNameLookup("Process", "ProcessId", "ProcessCode", "ProcessName");
-export const listQueues = () => listCodeNameLookup("Queue", "QueueId", "QueueCode", "QueueName");
 export const listSkills = () => listCodeNameLookup("Skill", "SkillId", "SkillCode", "SkillName");
+
+export interface QueueLookupRow extends CodeNameRow {
+  processId: number | null;
+  processName: string | null;
+}
+
+/**
+ * Queue needs its own query rather than listCodeNameLookup: ProcessId is how Calls workload
+ * (build spec section 19's workload-derived Staffing) attributes to a roster requirement's
+ * process, so every consumer needs to see it, not just Admin > Queues.
+ */
+export async function listQueues(): Promise<QueueLookupRow[]> {
+  const pool = await getPool();
+  const result = await pool.request().query<{ id: number; code: string; name: string; processId: number | null; processName: string | null }>(`
+    SELECT q.QueueId AS id, q.QueueCode AS code, q.QueueName AS name, q.ProcessId AS processId, p.ProcessName AS processName
+    FROM [master].Queue q
+    LEFT JOIN [master].Process p ON p.ProcessId = q.ProcessId
+    WHERE q.IsActive = 1
+    ORDER BY q.QueueName
+  `);
+  return result.recordset;
+}
+
+export async function setQueueProcess(queueId: number, processId: number | null): Promise<void> {
+  const pool = await getPool();
+  await pool
+    .request()
+    .input("QueueId", sql.Int, queueId)
+    .input("ProcessId", sql.Int, processId)
+    .query(`UPDATE [master].Queue SET ProcessId = @ProcessId WHERE QueueId = @QueueId`);
+}
 
 export async function listDepartments(): Promise<{ id: number; name: string }[]> {
   const pool = await getPool();

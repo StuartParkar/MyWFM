@@ -13,6 +13,7 @@ import {
   createShiftSchema,
   idParamSchema,
   nameOnlySchema,
+  setQueueProcessSchema,
   updateEmployeeSchema,
 } from "./masterdata.validation.js";
 
@@ -143,6 +144,18 @@ registerSimpleLookupWriteRoutes("locations", "Location", repo.createLocation, re
 registerSimpleLookupWriteRoutes("processes", "Process", repo.createProcess, repo.deactivateProcess);
 registerSimpleLookupWriteRoutes("queues", "Queue", repo.createQueue, repo.deactivateQueue);
 registerSimpleLookupWriteRoutes("skills", "Skill", repo.createSkill, repo.deactivateSkill);
+
+// Queue is the only simple lookup with a field worth editing after creation: ProcessId is how
+// Calls workload attributes to a roster requirement's process for the workload-derived
+// Staffing formulas (build spec section 19) - auto-created queues from a Calls import start
+// with no process, since nothing in the source files says which process a queue belongs to.
+masterDataRouter.patch("/queues/:id/process", manage, async (req, res) => {
+  const { id } = idParamSchema.parse(req.params);
+  const { processId } = setQueueProcessSchema.parse(req.body);
+  await repo.setQueueProcess(id, processId);
+  await recordAudit({ entityType: "Queue", entityId: String(id), action: "UPDATE", performedByUserId: req.user!.userId, after: { processId }, ...toRequestContext(req) });
+  res.status(204).send();
+});
 
 masterDataRouter.post("/departments", manage, async (req, res) => {
   const input = nameOnlySchema.parse(req.body);

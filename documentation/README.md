@@ -13,7 +13,9 @@
 | [`troubleshooting.md`](./troubleshooting.md) | Common failure modes and what to check |
 | [`roster.md`](./roster.md) | Roster requirement/approval/publication workflow and the Change Impact Simulator |
 | [`attendance.md`](./attendance.md) | The Business Day Engine and attendance sessions/formulas |
-| [`formulas.md`](./formulas.md) | The Calculation Engine/Ledger, and Shrinkage/Staffing - the formulas real data supports today |
+| [`formulas.md`](./formulas.md) | The Calculation Engine/Ledger, and every formula real data supports today (Shrinkage, Staffing, Calls, Forecast) |
+| [`controltower.md`](./controltower.md) | The Control Tower's 12 KPIs, why they use two different filter scopes, and Explain This Number |
+| [`reports.md`](./reports.md) | The six period-comparison Reports screens and Custom Reports' ad-hoc Ledger query tool |
 | [`imports.md`](./imports.md) | Import Center - the org-hierarchy and calls pipelines |
 | [`phone-system-mapping.md`](./phone-system-mapping.md) | Phone-system source mappings (Vonage, Elevate, RingCentral) |
 
