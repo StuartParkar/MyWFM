@@ -39,10 +39,16 @@ anomalies were first observed in the real data.
 
 ## What's still a stub
 
-No other source type exists yet. Roster/Attendance imports are Phase 4/5.
-Calls (three phone systems) are explicitly **not** built until real sample
+No other source type runs through this pipeline yet. Roster (Phase 4) and
+Attendance (Phase 5) turned out not to need it at all - both are populated by
+direct data entry through their own screens (a roster requirement, a manual
+attendance session), not an uploaded file, since no real external source
+system exists for either. Calls (three phone systems) are the pipeline's
+next real candidate, but are explicitly **not** built until real sample
 files are provided - see `phone-system-mapping.md` and build spec section 76
-("do not invent columns"). The current file-upload endpoint accepts raw text
-(`express.text()`) because TSV/CSV is what exists today; a binary format
+("do not invent columns"); the universal call *schema* it would eventually
+load into already exists (`documentation/database.md`'s `calls` schema), just
+with no importer feeding it yet. The current file-upload endpoint accepts raw
+text (`express.text()`) because TSV/CSV is what exists today; a binary format
 (e.g. Excel) will need a multipart upload (`multer`/`formidable`) added when
 a real source needs it - not before.

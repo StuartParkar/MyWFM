@@ -19,6 +19,9 @@ import { rosterRouter } from "./modules/roster/roster.routes.js";
 import { attendanceRouter } from "./modules/attendance/attendance.routes.js";
 import { businessDayRouter } from "./modules/businessday/businessday.routes.js";
 import { callsRouter } from "./modules/calls/calls.routes.js";
+import { shrinkageRouter } from "./modules/shrinkage/shrinkage.routes.js";
+import { staffingRouter } from "./modules/staffing/staffing.routes.js";
+import { formulaRouter } from "./modules/formula/formula.routes.js";
 
 export function createApp() {
   const app = express();
@@ -50,6 +53,9 @@ export function createApp() {
   app.use("/api/attendance", attendanceRouter);
   app.use("/api/business-day", businessDayRouter);
   app.use("/api/calls", callsRouter);
+  app.use("/api/shrinkage", shrinkageRouter);
+  app.use("/api/staffing", staffingRouter);
+  app.use("/api/formulas", formulaRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

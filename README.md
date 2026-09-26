@@ -65,9 +65,26 @@ Phase N" screen instead of a fake one
       formulas (Net Working Hours, Variance, Late/Early Minutes with configurable grace
       periods, Double Shift Exception). Operations > Attendance is wired to real data -
       see `documentation/attendance.md`.
-- [ ] **Phase 6 - Calls**: universal call model, per-phone-system mapping, aggregation.
-- [ ] **Phase 7 - Formula engine**: calculation ledger, staffing, shrinkage,
-      AHT, occupancy, service level, forecast, attrition.
+- [ ] **Phase 6 - Calls (paused, backend foundation only)**: the universal call
+      structure section 16 gives verbatim (`calls.QueueIntervalCall`/
+      `AgentIntervalCall`, two separate fact tables - queue-level and
+      agent-level records are different grains) and a read-only API exist and
+      are committed; both tables are intentionally empty. Paused mid-phase at
+      the user's request - real phone-system sample files are being provided,
+      so no source-specific mapping, frontend screen or tests are built until
+      then (section 76: never invent phone-system columns).
+- [x] **Phase 7 - Calculation engine & formulas (partial - only what real data
+      supports)**: a versioned Formula Library (metadata catalog, not a
+      runtime expression language) and an append-only Calculation Ledger
+      (build spec sections 32-33), plus the two formula groups real data
+      already exists for - Shrinkage % (manual entry, same pattern as
+      Attendance) and Staffing (Roster Coverage %, Staffing Gap, Actual
+      Staffing Gap, computed per *published* roster requirement against its
+      own human-entered Required HC). Answer Rate/AHT/Workload/Service Level/
+      Occupancy/Required Productive HC/Capacity Utilization and the Forecast
+      Engine all need call volume (blocked with Calls, above); Attrition
+      needs employee join/leave dates, promised but not yet provided. See
+      `documentation/formulas.md`.
 - [ ] **Phase 8 - Control Tower**: reports, filters, drilldowns, Explain This Number.
 - [ ] **Phase 9 - Intraday**: exceptions, action tracker, break management, OT/VTO.
 - [ ] **Phase 10 - Workforce & scenario planning**.

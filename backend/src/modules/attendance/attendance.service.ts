@@ -122,6 +122,31 @@ function toHours(ms: number): number {
   return round2(ms / 3_600_000);
 }
 
+export interface ScheduledWindow {
+  scheduledStart: string | null;
+  scheduledEnd: string | null;
+  scheduledHours: number | null;
+}
+
+/**
+ * An employee's scheduled window for one business date, from their active published-roster
+ * assignment - shared with shrinkage.service.ts (Shrinkage % needs the same Scheduled Hours
+ * this module's own Variance formula does), so the overnight-aware date math
+ * (combineLocalDateTime + the IsOvernight day-rollover) lives in exactly one place.
+ */
+export function computeScheduledWindow(
+  key: { businessDate: string; shiftId: number | null; startTime: string | null; endTime: string | null; isOvernight: boolean | null; isWeeklyOff: boolean },
+  tz: string,
+): ScheduledWindow {
+  if (key.isWeeklyOff) return { scheduledStart: null, scheduledEnd: null, scheduledHours: 0 };
+  if (!key.shiftId || !key.startTime || !key.endTime) return { scheduledStart: null, scheduledEnd: null, scheduledHours: null };
+
+  const scheduledStart = combineLocalDateTime(key.businessDate, key.startTime, tz);
+  const endDate = key.isOvernight ? addDays(key.businessDate, 1) : key.businessDate;
+  const scheduledEnd = combineLocalDateTime(endDate, key.endTime, tz);
+  return { scheduledStart, scheduledEnd, scheduledHours: toHours(new Date(scheduledEnd).getTime() - new Date(scheduledStart).getTime()) };
+}
+
 /** Build spec section 15's formulas, computed per (employee, business date) from the raw session set - never stored, always derived so a config change (grace period, min gap) applies retroactively rather than needing a backfill. */
 function summarizeDay(key: repo.ScheduleKeyRow, allSessions: repo.AttendanceSessionRow[], config: { tz: string; lateGraceMinutes: number; earlyGraceMinutes: number; minGapHours: number }): DailyAttendanceSummary {
   const sorted = [...allSessions].sort((a, b) => a.sessionStart.localeCompare(b.sessionStart));
@@ -143,17 +168,7 @@ function summarizeDay(key: repo.ScheduleKeyRow, allSessions: repo.AttendanceSess
     if (gapMs < config.minGapHours * 3_600_000) doubleShiftException = true;
   }
 
-  let scheduledStart: string | null = null;
-  let scheduledEnd: string | null = null;
-  let scheduledHours: number | null = null;
-  if (key.isWeeklyOff) {
-    scheduledHours = 0;
-  } else if (key.shiftId && key.startTime && key.endTime) {
-    scheduledStart = combineLocalDateTime(key.businessDate, key.startTime, config.tz);
-    const endDate = key.isOvernight ? addDays(key.businessDate, 1) : key.businessDate;
-    scheduledEnd = combineLocalDateTime(endDate, key.endTime, config.tz);
-    scheduledHours = toHours(new Date(scheduledEnd).getTime() - new Date(scheduledStart).getTime());
-  }
+  const { scheduledStart, scheduledEnd, scheduledHours } = computeScheduledWindow(key, config.tz);
 
   const varianceHours = netWorkingHours !== null && scheduledHours !== null ? round2(netWorkingHours - scheduledHours) : null;
 

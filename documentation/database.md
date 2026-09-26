@@ -28,6 +28,10 @@ operate the migration runner.
 | `roster` | `PublishedRoster` | The official roster, versioned - one active row per employee/date (`UX_PublishedRoster_ActiveSlot` filtered unique index), same never-overwrite discipline as `config.ConfigurationSetting` |
 | `roster` | `RosterChange` | Confirmed shift/weekly-off changes outside the requirement workflow, with before/after `PublishedRoster` links |
 | `attendance` | `AttendanceSession` | Login/logout sessions (multiple per employee/business date - see `documentation/attendance.md`); First Login/Last Logout/Net Working Hours are derived on read, never stored |
+| `calls` | `QueueIntervalCall`, `AgentIntervalCall` | The universal call data model (build spec section 16) - two separate fact tables (different grains), both empty: no importer exists until real phone-system files arrive (Phase 6, paused) |
+| `shrinkage` | `ShrinkageCategory`, `ShrinkageEntry` | Unavailable time by category (Planned Leave, Training, Break, ...), manual entry / authorized adjustment - see `documentation/formulas.md` |
+| `formula` | `FormulaDefinition` | The Formula Library's browsable catalog - metadata only (name/description/version/effective date), never an executable expression |
+| `formula` | `CalculationLedger` | Every computed KPI value, its formula version and inputs, append-only - see `documentation/formulas.md` |
 
 `master.Employee` is loaded from the real org hierarchy sample via
 `npm run import:org-hierarchy --workspace=backend`

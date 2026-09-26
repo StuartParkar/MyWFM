@@ -52,6 +52,12 @@ export const PERMISSION_CODES = [
 
   // Calls (Phase 6) - view-only: no importer exists yet to gate a manage permission against.
   "calls.view",
+
+  // Calculation engine & formulas (Phase 7)
+  "shrinkage.view",
+  "shrinkage.manage",
+  "staffing.view",
+  "formula.view",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];

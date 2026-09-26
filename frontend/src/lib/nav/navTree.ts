@@ -34,7 +34,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Workforce Planning", path: "/workforce/planning", available: false, phase: 10, description: "Current/required/future HC, hiring gap, by month/department/process/location/designation." },
       { label: "Forecast", path: "/workforce/forecast", available: false, phase: 7, description: "Deterministic forecast engine: base forecast x trend x seasonality x holiday, with accuracy/MAE/MAPE/bias." },
-      { label: "Staffing", path: "/workforce/staffing", available: false, phase: 7, description: "Required/scheduled/actual staffing gap, coverage and capacity utilization." },
+      { label: "Staffing", path: "/workforce/staffing", available: true, phase: 7, description: "Required/scheduled/actual staffing gap, coverage and capacity utilization." },
       { label: "Scenarios", path: "/workforce/scenarios", available: false, phase: 10, description: "What-if scenario planning (volume/AHT/shrinkage/HC changes) that never touches live data." },
     ],
   },
@@ -64,7 +64,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Calls", path: "/operations/calls", available: false, phase: 6, description: "Universal call model across phone systems: offered/answered/abandoned, AHT, workload, service level." },
       { label: "Attendance", path: "/operations/attendance", available: true, phase: 5, description: "Login/logout, net working hours, variance, late/early exceptions, on the Business Day Engine." },
-      { label: "Shrinkage", path: "/operations/shrinkage", available: false, phase: 7, description: "Category-level and total shrinkage against scheduled hours." },
+      { label: "Shrinkage", path: "/operations/shrinkage", available: true, phase: 7, description: "Category-level and total shrinkage against scheduled hours." },
       { label: "Attrition", path: "/operations/attrition", available: false, phase: 7, description: "Opening/closing HC, joiners, exits, transfers, attrition rate." },
     ],
   },
@@ -100,7 +100,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Shifts", path: "/admin/shifts", available: true, phase: 2, description: "Shift and weekly-off pattern master data." },
       { label: "Holidays", path: "/admin/holidays", available: true, phase: 2, description: "Holiday and operating-day calendar." },
       { label: "Configuration", path: "/admin/configuration", available: false, phase: 7, description: "The versioned Configuration Center UI over config.ConfigurationSetting." },
-      { label: "Formula Library", path: "/admin/formula-library", available: false, phase: 7, description: "Every formula's version, inputs, parameters and effective date, browsable by permission." },
+      { label: "Formula Library", path: "/admin/formula-library", available: true, phase: 7, description: "Every formula's version, inputs, parameters and effective date, browsable by permission." },
       { label: "Users & Roles", path: "/admin/users-roles", available: true, phase: 2, description: "User account and role administration on top of the security.* RBAC foundation." },
       { label: "Audit", path: "/admin/audit", available: true, phase: 1, description: "The audit log: who did what, when, and why." },
     ],

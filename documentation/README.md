@@ -13,7 +13,7 @@
 | [`troubleshooting.md`](./troubleshooting.md) | Common failure modes and what to check |
 | [`roster.md`](./roster.md) | Roster requirement/approval/publication workflow and the Change Impact Simulator |
 | [`attendance.md`](./attendance.md) | The Business Day Engine and attendance sessions/formulas |
-| [`formulas.md`](./formulas.md) | Formula & Rule Library - stub until Phase 7 |
+| [`formulas.md`](./formulas.md) | The Calculation Engine/Ledger, and Shrinkage/Staffing - the formulas real data supports today |
 | [`imports.md`](./imports.md) | Import Center - stub until Phase 3 |
 | [`phone-system-mapping.md`](./phone-system-mapping.md) | Phone-system source mappings - stub until Phase 6 |
 

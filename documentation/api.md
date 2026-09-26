@@ -11,7 +11,7 @@ Base path: `/api`. Every response is one of the two shapes in
 `errorId` correlates to a server-side log line with full technical detail -
 never expect (or parse) more detail from the response body itself.
 
-## Endpoints (Phases 1-5)
+## Endpoints (Phases 1-7)
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
@@ -56,8 +56,19 @@ never expect (or parse) more detail from the response body itself.
 | PATCH | `/api/attendance/sessions/:id` | bearer + `attendance.manage` | Adjustment: `{ sessionStart?, sessionEnd?, breakMinutes?, reason }` - `reason` is mandatory |
 | DELETE | `/api/attendance/sessions/:id` | bearer + `attendance.manage` | Body `{ reason }` - `reason` is mandatory |
 | GET | `/api/business-day/today` | bearer | `{ businessDate, timezone }` - the company-wide business date right now (`resolveGlobalBusinessDate`) |
+| GET | `/api/calls/queue-intervals` | bearer + `calls.view` | `?from=&to=&queueId=`, paginated - always empty today, see `documentation/phone-system-mapping.md` |
+| GET | `/api/calls/agent-intervals` | bearer + `calls.view` | `?from=&to=&agentId=&queueId=`, paginated - always empty today |
+| GET | `/api/shrinkage/categories` | bearer + `shrinkage.view` | The seeded category list (Planned Leave, Training, Break, ...) |
+| GET | `/api/shrinkage` | bearer + `shrinkage.view` | Paginated daily shrinkage summaries, `?from=&to=&employeeId=` (`from`/`to` required) |
+| GET | `/api/shrinkage/entries` | bearer + `shrinkage.view` | `?employeeId=&businessDate=` (both required) - raw entries for one employee/day |
+| POST | `/api/shrinkage/entries` | bearer + `shrinkage.manage` | Manual entry: `{ employeeId, businessDate, shrinkageCategoryId, minutes, notes? }` |
+| PATCH | `/api/shrinkage/entries/:id` | bearer + `shrinkage.manage` | Adjustment: `{ minutes?, shrinkageCategoryId?, notes?, reason }` - `reason` is mandatory |
+| DELETE | `/api/shrinkage/entries/:id` | bearer + `shrinkage.manage` | Body `{ reason }` - `reason` is mandatory |
+| GET | `/api/staffing/coverage` | bearer + `staffing.view` | Paginated, `?from=&to=&departmentId=&processId=` (`from`/`to` required) - per published roster requirement |
+| GET | `/api/formulas` | bearer + `formula.view` | The active Formula Library catalog |
+| GET | `/api/formulas/ledger` | bearer + `formula.view` | Paginated, `?formulaCode=&entityType=&entityId=` - the Calculation Ledger, newest first |
 
-Every future module's endpoints (`/api/calls`, ...) follow the
+Every future module's endpoints follow the
 same envelope, auth (`requireAuth`), authorization
 (`requirePermission("module.action")`) and validation (`zod`, surfaced as
 `fieldErrors`) pattern - see `backend/src/modules/auth` as the reference

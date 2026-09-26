@@ -50,7 +50,11 @@ USING (VALUES
     ('roster.change',       'roster', 'Change a published roster assignment (shift/weekly-off).'),
     ('attendance.view',     'attendance', 'View attendance sessions and derived daily attendance summaries.'),
     ('attendance.manage',   'attendance', 'Record or adjust attendance sessions (manual entry / authorized adjustment).'),
-    ('calls.view',          'calls', 'View queue-level and agent-level call interval records.')
+    ('calls.view',          'calls', 'View queue-level and agent-level call interval records.'),
+    ('shrinkage.view',      'shrinkage', 'View shrinkage entries and derived shrinkage percentages.'),
+    ('shrinkage.manage',    'shrinkage', 'Record or adjust shrinkage entries.'),
+    ('staffing.view',       'staffing', 'View roster coverage, staffing gap and actual staffing gap.'),
+    ('formula.view',        'formula', 'Browse the Formula Library and the Calculation Ledger.')
 ) AS source (PermissionCode, ModuleName, Description)
 ON target.PermissionCode = source.PermissionCode
 WHEN MATCHED THEN
@@ -75,7 +79,8 @@ USING (
         ON p.PermissionCode IN (
             'user.view', 'config.view', 'audit.view', 'system.health.view', 'job.view', 'job.manage',
             'masterdata.view', 'import.view', 'import.execute', 'dataquality.view',
-            'roster.view', 'roster.review.wfm', 'roster.change', 'attendance.view', 'attendance.manage', 'calls.view'
+            'roster.view', 'roster.review.wfm', 'roster.change', 'attendance.view', 'attendance.manage', 'calls.view',
+            'shrinkage.view', 'shrinkage.manage', 'staffing.view', 'formula.view'
         )
     WHERE r.RoleCode = 'WFM'
 
@@ -84,7 +89,7 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.hod', 'attendance.view', 'calls.view')
+        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.hod', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view')
     WHERE r.RoleCode = 'HOD'
 
     UNION ALL
@@ -92,7 +97,7 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.leader', 'attendance.view', 'calls.view')
+        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.leader', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view')
     WHERE r.RoleCode = 'LEADER'
 
     UNION ALL
