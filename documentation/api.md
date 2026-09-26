@@ -36,6 +36,10 @@ never expect (or parse) more detail from the response body itself.
 | POST | `/api/users` | bearer + `user.manage` | Create a user (email, password, displayName, roleCodes) |
 | PATCH | `/api/users/:userId/roles` | bearer + `role.manage` | Replace a user's role grants |
 | PATCH | `/api/users/:userId/active` | bearer + `user.manage` | Activate/deactivate a user |
+| GET | `/api/imports` | bearer + `import.view` | Paginated import run history with counts and status |
+| POST | `/api/imports/org-hierarchy?fileName=` | bearer + `import.execute` | Body is the raw file text (not JSON) - runs the org-hierarchy pipeline |
+| GET | `/api/imports/data-quality` | bearer + `dataquality.view` | Paginated, `?status=OPEN\|ACKNOWLEDGED\|RESOLVED\|IGNORED` |
+| PATCH | `/api/imports/data-quality/:id` | bearer + `dataquality.view` | Body `{ status }` - resolve/acknowledge/ignore a finding |
 
 Every future module's endpoints (`/api/roster`, `/api/calls`, ...) follow the
 same envelope, auth (`requireAuth`), authorization

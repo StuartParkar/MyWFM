@@ -1,26 +1,48 @@
 # Import Center
 
-Stub. This becomes real in Phase 3: Upload -> Staging -> Format Validation ->
-Source Mapping -> Normalization -> Duplicate Check -> Data Quality -> Merge ->
-Aggregation -> Calculation -> Ledger (build spec section 29), with a unique
-`IMPORT-00000001`-style id per file and full duplicate/business-key handling
-(section 30).
+Generic pipeline (build spec section 29): Upload -> Staging -> Validation ->
+Normalization -> Duplicate Check -> Data Quality -> Merge, tracked end to end
+in `import.ImportRun` (displayed as `IMPORT-00000001`-style codes) with every
+anomaly recorded as an `import.DataQualityIssue` row rather than a log line
+that scrolls away.
 
-## What already exists that Phase 3 will build on
+## What's wired up (Phase 3)
 
-- `imports/templates/`, `imports/samples/`, `imports/rejected/` folder
-  structure (`imports/*/README.md` explain each).
-- `imports/samples/master-data/` holds a **real** organizational hierarchy
-  sample (not a phone-system import, but the same "inspect the real file
-  before building the mapping" discipline build spec section 76 asks for) -
-  see that folder's README for the concrete data-quality findings (alias-based
-  leader references, `TBA-*` vacant placeholders, inconsistent null
-  representation, combined `Process` values) that Phase 3's Data Quality
-  Center design should generalize from.
-- The background job queue (`backend/src/modules/jobs/jobQueue.ts`) that
-  imports will enqueue onto, already durable and worker-polled.
-- The audit log that every import's outcome will write into.
+One real source type: the employee/organization hierarchy file (the same
+real data Phase 2's schema was designed from). `POST /api/imports/org-hierarchy`
+(Admin > Data > Import Center screen) runs an uploaded file through the full
+pipeline; `npm run import:org-hierarchy --workspace=backend` runs the same
+pipeline against the fixed sample path as a CLI convenience. Both call the
+same `backend/src/modules/imports/orgHierarchyImporter.ts` - there is only
+one implementation of this logic.
 
-Nothing about parsing, validation rules, or the universal call/roster/
-attendance models is built yet - see `phone-system-mapping.md` for the
-call-specific piece of this.
+Concretely, each run:
+
+1. **Validates**: rejects rows missing Emp ID or Name (`MISSING_REQUIRED_FIELD`, HIGH).
+2. **Duplicate-checks**: an Emp ID appearing twice in the same file is flagged
+   (`DUPLICATE_ROW`, MEDIUM) and only the first occurrence is used. A
+   re-upload of an already-imported employee is not a "duplicate" in this
+   sense - it's a normal update (see Records Inserted vs. Updated below).
+3. **Normalizes**: upserts Location/Department/Process lookups, splits a
+   combined Process value (`ABS/LBF`) into multiple `EmployeeProcess` rows.
+4. **Merges**: `MERGE ... OUTPUT $action` classifies each row as an insert or
+   an update against `master.Employee` by `EmployeeCode` (the business key) -
+   never a blind append, per section 30.
+5. **Data quality**: resolves each leader alias, raising `VACANT_LEADER_PLACEHOLDER`
+   (LOW, informational - `TBA-*` values), `MULTI_VALUE_CELL` (MEDIUM - a cell
+   naming more than one person), `UNRESOLVED_LEADER_ALIAS` (HIGH - an alias
+   matching no employee), or `DUPLICATE_ALIAS` (MEDIUM - two employees
+   sharing one alias).
+
+See `imports/samples/master-data/README.md` for where these specific
+anomalies were first observed in the real data.
+
+## What's still a stub
+
+No other source type exists yet. Roster/Attendance imports are Phase 4/5.
+Calls (three phone systems) are explicitly **not** built until real sample
+files are provided - see `phone-system-mapping.md` and build spec section 76
+("do not invent columns"). The current file-upload endpoint accepts raw text
+(`express.text()`) because TSV/CSV is what exists today; a binary format
+(e.g. Excel) will need a multipart upload (`multer`/`formidable`) added when
+a real source needs it - not before.

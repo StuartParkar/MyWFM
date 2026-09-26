@@ -84,8 +84,8 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Data",
     items: [
-      { label: "Import Center", path: "/data/import-center", available: false, phase: 3, description: "Upload -> staging -> validation -> normalization -> data quality -> merge, with a unique Import ID per file." },
-      { label: "Data Quality", path: "/data/data-quality", available: false, phase: 3, description: "Detected data-quality issues by severity, source and record, with a suggested corrective path." },
+      { label: "Import Center", path: "/data/import-center", available: true, phase: 3, description: "Upload -> staging -> validation -> normalization -> data quality -> merge, with a unique Import ID per file." },
+      { label: "Data Quality", path: "/data/data-quality", available: true, phase: 3, description: "Detected data-quality issues by severity, source and record, with a suggested corrective path." },
       { label: "Data Lineage", path: "/data/data-lineage", available: false, phase: 11, description: "KPI -> calculation -> formula version -> normalized data -> import -> original file." },
       { label: "Reprocessing", path: "/data/reprocessing", available: false, phase: 11, description: "Authorized reprocessing by date/process/department/queue/agent/import/calculation type." },
     ],

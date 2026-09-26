@@ -38,7 +38,10 @@ USING (VALUES
     ('job.view',            'system', 'View background job status.'),
     ('job.manage',          'system', 'Cancel/retry background jobs.'),
     ('masterdata.view',     'masterdata', 'View employees, organization, processes, shifts, queues and skills.'),
-    ('masterdata.manage',   'masterdata', 'Create/edit master data records.')
+    ('masterdata.manage',   'masterdata', 'Create/edit master data records.'),
+    ('import.view',         'import', 'View import runs and their status/counts.'),
+    ('import.execute',      'import', 'Upload and run imports.'),
+    ('dataquality.view',    'import', 'View data-quality issues raised by imports.')
 ) AS source (PermissionCode, ModuleName, Description)
 ON target.PermissionCode = source.PermissionCode
 WHEN MATCHED THEN
@@ -63,7 +66,10 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('user.view', 'config.view', 'audit.view', 'system.health.view', 'job.view', 'job.manage', 'masterdata.view')
+        ON p.PermissionCode IN (
+            'user.view', 'config.view', 'audit.view', 'system.health.view', 'job.view', 'job.manage',
+            'masterdata.view', 'import.view', 'import.execute', 'dataquality.view'
+        )
     WHERE r.RoleCode = 'WFM'
 
     UNION ALL

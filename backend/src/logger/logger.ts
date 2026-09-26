@@ -26,11 +26,16 @@ const base = pino({
 });
 
 export interface AppLogger {
-  debug(meta: Record<string, unknown>, msg: string): void;
-  info(meta: Record<string, unknown>, msg: string): void;
-  warn(meta: Record<string, unknown>, msg: string): void;
-  error(meta: Record<string, unknown>, msg: string): void;
-  critical(meta: Record<string, unknown>, msg: string): void;
+  // `object`, not `Record<string, unknown>`: a named interface/type without
+  // its own index signature isn't assignable to Record<string, unknown> at
+  // call sites (TS2345), which would force every caller to spread into a
+  // fresh literal for no real benefit - `object` accepts any non-primitive
+  // shape without that friction.
+  debug(meta: object, msg: string): void;
+  info(meta: object, msg: string): void;
+  warn(meta: object, msg: string): void;
+  error(meta: object, msg: string): void;
+  critical(meta: object, msg: string): void;
   child(bindings: Record<string, unknown>): AppLogger;
 }
 

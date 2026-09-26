@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { normalizeNone, parseTsv } from "../src/scripts/importOrgHierarchy.js";
+import { normalizeNone, parseTsv } from "../src/modules/imports/orgHierarchyParser.js";
 
 describe("normalizeNone", () => {
   it("treats a dash as no value", () => {

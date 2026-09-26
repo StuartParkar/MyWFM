@@ -42,7 +42,13 @@ Phase N" screen instead of a fake one
       loaded via `npm run import:org-hierarchy --workspace=backend`. Global
       Filter Bar's HOD->TL->Agent/Senior cascade and Admin > Employees/
       Organization/Queues/Skills/Shifts screens are wired to real data.
-- [ ] **Phase 3 - Import framework**: staging, normalization, data quality, import logs.
+- [x] **Phase 3 - Import framework**: generic `import.ImportRun`/`DataQualityIssue`
+      pipeline (staged->validated->normalized->duplicate-checked->
+      data-quality-checked->merged), with the employee/organization hierarchy
+      as its first real source type (upload via Admin > Data > Import Center,
+      or `npm run import:org-hierarchy --workspace=backend`). No other source
+      type exists yet - Calls stays unbuilt until real phone-system files
+      arrive (section 76).
 - [ ] **Phase 4 - Roster**: requirement, approval workflow, versioning, publication.
 - [ ] **Phase 5 - Attendance & Business Day Engine**.
 - [ ] **Phase 6 - Calls**: universal call model, per-phone-system mapping, aggregation.

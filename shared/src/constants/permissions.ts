@@ -32,6 +32,11 @@ export const PERMISSION_CODES = [
   // Master data (Phase 2)
   "masterdata.view",
   "masterdata.manage",
+
+  // Import Center / Data Quality (Phase 3)
+  "import.view",
+  "import.execute",
+  "dataquality.view",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];

@@ -21,6 +21,9 @@ operate the migration runner.
 | `master` | `Employee` | Self-referencing hierarchy (Sme/TeamLeader/Am/Manager/SrManager/UnitHod EmployeeId columns), `VacantTeamLeaderLabel` for "TBA-*" placeholders |
 | `master` | `EmployeeProcess` | Many-to-many - a combined source value like "ABS/LBF" becomes two rows, not one literal Process |
 | `master` | `Shift`, `Queue`, `Skill`, `EmployeeSkill`, `QueueSkillRequirement` | Master data with no real rows yet (nothing to seed without inventing it - see each Admin screen's empty state) |
+| `master` | `Holiday`, `WeeklyOffPattern`, `ReasonCode` | Holiday calendar (real UI), and two lookups later phases populate categories into |
+| `import` | `ImportRun` | One row per upload/CLI run, displayed as an `IMPORT-00000001`-style code |
+| `import` | `DataQualityIssue` | One row per anomaly an import finds (severity, type, suggested action, status) - see `documentation/imports.md` |
 
 `master.Employee` is loaded from the real org hierarchy sample via
 `npm run import:org-hierarchy --workspace=backend`
