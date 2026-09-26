@@ -181,18 +181,18 @@ forecast requests will honestly report insufficient history. That's
 expected, not a bug - the engine gets more useful precisely as more real
 call history accumulates, not before.
 
-## What's still not built, and why
+## What else is now built elsewhere
 
-- **Attrition** (section 22) needs employee join/leave dates, which have been
-  promised but not yet provided (see the org-hierarchy import's own
-  documentation) - opening/closing HC and attrition rate would otherwise be
-  guessed at.
 Interval-level Calls/AHT/Occupancy/Service Level (as opposed to the
 daily/summary versions above) is now built - see Intraday Control and
 `documentation/intraday.md`, a genuinely different grain and screen from
 this file's own daily/summary formulas, not a duplicate of them.
 
-Each of the above gets built the moment its real input arrives, not before.
+Attrition (section 22 - Opening/Closing HC, Joiners, Exits, Transfers,
+Attrition Rate) is also now built, despite the org-hierarchy import never
+providing real join/leave dates - see `documentation/attrition.md` for
+where those dates actually come from instead (the importer's own
+first-seen/last-seen inference, or a real HR date entered manually).
 
 ## Screens
 

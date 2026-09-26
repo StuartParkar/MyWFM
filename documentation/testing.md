@@ -25,10 +25,12 @@ npm test   # runs shared, then backend (vitest)
   shrinkage/staffing/forecast/Control Tower; Phase 9's intraday
   interval-bucketing engine, exception engine and OT/VTO capacity-impact
   preview; Phase 10's Workforce Planning projection and Scenario Planning
-  baseline/delta math) has its own `backend/tests/*.test.ts` following the
-  same mock-the-repository-layer, exercise-the-real-service pattern - see
-  each module's test file for exactly what it covers rather than this list
-  restating every case; `npm test` runs all of them.
+  baseline/delta math; Attrition's join/exit/transfer detection
+  (`orgHierarchyAttrition.test.ts`) and Opening/Closing HC/Attrition Rate
+  math (`attritionService.test.ts`)) has its own `backend/tests/*.test.ts`
+  following the same mock-the-repository-layer, exercise-the-real-service
+  pattern - see each module's test file for exactly what it covers rather
+  than this list restating every case; `npm test` runs all of them.
 
 None of these need a real SQL Server - they mock the DB layer or test pure
 functions. There is no integration test against a live SQL Server yet,

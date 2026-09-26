@@ -1,3 +1,4 @@
+import { getConfigNumber } from "../../config/appConfig.js";
 import { getPool, sql } from "../../db/pool.js";
 import { logger } from "../../logger/logger.js";
 import { recordAudit } from "../audit/audit.service.js";
@@ -15,7 +16,40 @@ export interface OrgHierarchyImportResult {
   recordsInserted: number;
   recordsUpdated: number;
   recordsDuplicate: number;
+  /** Employees present in an earlier import but missing from this one - see build spec
+   * section 22 / documentation/attrition.md. 0 whenever the missing fraction exceeded the
+   * attrition.max_auto_exit_fraction safety threshold (a data-quality issue is raised instead). */
+  recordsExited: number;
+  /** A Department/Location/primary-Process change detected for an already-known employee. */
+  recordsTransferred: number;
   dataQualityIssueCount: number;
+}
+
+export interface TransferCheckInput {
+  wasInsert: boolean;
+  oldDepartmentId: number | null;
+  newDepartmentId: number | null;
+  oldLocationId: number | null;
+  newLocationId: number | null;
+  oldPrimaryProcessId: number | null;
+  newPrimaryProcessId: number | null;
+}
+
+/** A fresh INSERT is a join, never a transfer - only an already-known employee (matched on
+ * EmployeeCode) can be "transferred." Exported standalone so this decision is unit-tested
+ * without needing a mocked SQL pool - see documentation/attrition.md. */
+export function isRealTransfer(input: TransferCheckInput): boolean {
+  if (input.wasInsert) return false;
+  return input.oldDepartmentId !== input.newDepartmentId || input.oldLocationId !== input.newLocationId || input.oldPrimaryProcessId !== input.newPrimaryProcessId;
+}
+
+/** True when the fraction of the current active roster missing from a re-import is large
+ * enough that it's more likely a partial/wrong file than real mass attrition (build spec
+ * section 22 / attrition.max_auto_exit_fraction) - in which case none of them should be
+ * auto-marked exited. */
+export function exceedsMassExitThreshold(missingCount: number, activeCount: number, maxAutoExitFraction: number): boolean {
+  if (activeCount === 0) return false;
+  return missingCount / activeCount > maxAutoExitFraction;
 }
 
 export interface ImportEmployeeHierarchyOptions {
@@ -90,6 +124,9 @@ export async function importEmployeeHierarchy(text: string, opts: ImportEmployee
     dataQualityIssueCount += 1;
     await importRepo.createDataQualityIssue({ ...input, importRunId });
   };
+  // This run's own effective date for every join/exit/transfer it detects - never "today"
+  // computed later, so every date this run writes agrees even if the run spans a slow moment.
+  const effectiveDate = new Date().toISOString().slice(0, 10);
 
   try {
     const allRows = parseTsv(text);
@@ -153,36 +190,67 @@ export async function importEmployeeHierarchy(text: string, opts: ImportEmployee
 
     const pool = await getPool();
     const employeeIdByCode = new Map<string, string>();
+    // Old Department/Location (from the MERGE's own OUTPUT DELETED.* - NULL for a fresh INSERT,
+    // meaningless there anyway since a brand-new employee has no "transfer," only a join) plus
+    // old primary Process (fetched below, before that separate table is touched) feed the
+    // transfer-detection pass once every row has been processed.
+    interface TransferCandidate {
+      employeeId: string;
+      oldDepartmentId: number | null;
+      newDepartmentId: number | null;
+      oldLocationId: number | null;
+      newLocationId: number | null;
+      oldPrimaryProcessId: number | null;
+      newPrimaryProcessId: number | null;
+      wasInsert: boolean;
+    }
+    const transferCandidates = new Map<string, TransferCandidate>();
     let recordsInserted = 0;
     let recordsUpdated = 0;
 
     for (const row of rows) {
+      const newDepartmentId = row.departmentName ? (departmentIdByName.get(row.departmentName) ?? null) : null;
+      const newLocationId = row.locationCode ? (locationIdByCode.get(row.locationCode) ?? null) : null;
       const result = await pool
         .request()
         .input("EmployeeCode", sql.VarChar(20), row.employeeCode)
         .input("FullName", sql.NVarChar(200), row.fullName)
         .input("AliasName", sql.NVarChar(100), row.aliasName)
-        .input("LocationId", sql.Int, row.locationCode ? locationIdByCode.get(row.locationCode) : null)
-        .input("DepartmentId", sql.Int, row.departmentName ? departmentIdByName.get(row.departmentName) : null)
-        .query<{ EmployeeId: string; Action: string }>(`
+        .input("LocationId", sql.Int, newLocationId)
+        .input("DepartmentId", sql.Int, newDepartmentId)
+        .input("JoinDate", sql.Date, effectiveDate)
+        .query<{ EmployeeId: string; Action: string; OldDepartmentId: number | null; OldLocationId: number | null }>(`
           MERGE [master].Employee AS target
           USING (SELECT @EmployeeCode AS EmployeeCode) AS source
           ON target.EmployeeCode = source.EmployeeCode
           WHEN MATCHED THEN UPDATE SET
             FullName = @FullName, AliasName = @AliasName, LocationId = @LocationId, DepartmentId = @DepartmentId, ModifiedAt = SYSUTCDATETIME()
           WHEN NOT MATCHED THEN
-            INSERT (EmployeeCode, FullName, AliasName, LocationId, DepartmentId)
-            VALUES (@EmployeeCode, @FullName, @AliasName, @LocationId, @DepartmentId)
-          OUTPUT $action AS Action, INSERTED.EmployeeId AS EmployeeId;
+            -- JoinDate is this run's own effective date - the real (if imprecise) fact of when
+            -- this system first learned about this employee, never overwritten on later
+            -- updates and never touched at all if a real HR date is later entered manually
+            -- (Admin > Employees) - see documentation/attrition.md.
+            INSERT (EmployeeCode, FullName, AliasName, LocationId, DepartmentId, JoinDate)
+            VALUES (@EmployeeCode, @FullName, @AliasName, @LocationId, @DepartmentId, @JoinDate)
+          OUTPUT $action AS Action, INSERTED.EmployeeId AS EmployeeId,
+                 DELETED.DepartmentId AS OldDepartmentId, DELETED.LocationId AS OldLocationId;
         `);
       const row0 = result.recordset[0]!;
       employeeIdByCode.set(row.employeeCode, row0.EmployeeId);
-      if (row0.Action === "INSERT") recordsInserted += 1;
+      const wasInsert = row0.Action === "INSERT";
+      if (wasInsert) recordsInserted += 1;
       else recordsUpdated += 1;
+      transferCandidates.set(row0.EmployeeId, { employeeId: row0.EmployeeId, oldDepartmentId: row0.OldDepartmentId, newDepartmentId, oldLocationId: row0.OldLocationId, newLocationId, oldPrimaryProcessId: null, newPrimaryProcessId: null, wasInsert });
     }
 
     for (const row of rows) {
       const employeeId = employeeIdByCode.get(row.employeeCode)!;
+      const oldPrimary = await pool
+        .request()
+        .input("EmployeeId", sql.UniqueIdentifier, employeeId)
+        .query<{ ProcessId: number }>(`SELECT ProcessId FROM [master].EmployeeProcess WHERE EmployeeId = @EmployeeId AND IsPrimary = 1`);
+      const oldPrimaryProcessId = oldPrimary.recordset[0]?.ProcessId ?? null;
+
       await pool.request().input("EmployeeId", sql.UniqueIdentifier, employeeId).query(
         `DELETE FROM [master].EmployeeProcess WHERE EmployeeId = @EmployeeId`,
       );
@@ -193,6 +261,68 @@ export async function importEmployeeHierarchy(text: string, opts: ImportEmployee
           .input("ProcessId", sql.Int, processIdByCode.get(code))
           .input("IsPrimary", sql.Bit, i === 0)
           .query(`INSERT INTO [master].EmployeeProcess (EmployeeId, ProcessId, IsPrimary) VALUES (@EmployeeId, @ProcessId, @IsPrimary)`);
+      }
+      const newPrimaryProcessId = row.processCodes.length > 0 ? (processIdByCode.get(row.processCodes[0]!) ?? null) : null;
+      transferCandidates.set(employeeId, { ...transferCandidates.get(employeeId)!, oldPrimaryProcessId, newPrimaryProcessId });
+    }
+
+    // A Department/Location/primary-Process change has no history anywhere else - see
+    // migration 0014_attrition.sql's header comment. Only for an already-known employee (an
+    // INSERT is a join, not a transfer) and only when something actually differs.
+    let recordsTransferred = 0;
+    for (const candidate of transferCandidates.values()) {
+      if (!isRealTransfer(candidate)) continue;
+
+      await pool
+        .request()
+        .input("EmployeeId", sql.UniqueIdentifier, candidate.employeeId)
+        .input("EffectiveDate", sql.Date, effectiveDate)
+        .input("PreviousDepartmentId", sql.Int, candidate.oldDepartmentId)
+        .input("NewDepartmentId", sql.Int, candidate.newDepartmentId)
+        .input("PreviousLocationId", sql.Int, candidate.oldLocationId)
+        .input("NewLocationId", sql.Int, candidate.newLocationId)
+        .input("PreviousPrimaryProcessId", sql.Int, candidate.oldPrimaryProcessId)
+        .input("NewPrimaryProcessId", sql.Int, candidate.newPrimaryProcessId)
+        .input("SourceImportRunId", sql.BigInt, importRunId)
+        .query(`
+          INSERT INTO [master].EmployeeTransfer
+            (EmployeeId, EffectiveDate, PreviousDepartmentId, NewDepartmentId, PreviousLocationId, NewLocationId, PreviousPrimaryProcessId, NewPrimaryProcessId, SourceImportRunId)
+          VALUES
+            (@EmployeeId, @EffectiveDate, @PreviousDepartmentId, @NewDepartmentId, @PreviousLocationId, @NewLocationId, @PreviousPrimaryProcessId, @NewPrimaryProcessId, @SourceImportRunId)
+        `);
+      recordsTransferred += 1;
+    }
+
+    // Exits: this file is a full roster snapshot, so a currently-active employee simply absent
+    // from it has left - but only within a sane fraction of the current roster (see
+    // attrition.max_auto_exit_fraction's own seed-data comment); a bigger absence is far more
+    // likely a partial/wrong file than real mass attrition, so it becomes a review item instead
+    // of a silent mass deactivation.
+    const activeResult = await pool.request().query<{ EmployeeId: string; EmployeeCode: string }>(
+      `SELECT EmployeeId, EmployeeCode FROM [master].Employee WHERE IsActive = 1`,
+    );
+    const seenEmployeeCodes = new Set(rows.map((r) => r.employeeCode));
+    const missingEmployees = activeResult.recordset.filter((e) => !seenEmployeeCodes.has(e.EmployeeCode));
+    const maxAutoExitFraction = getConfigNumber("attrition.max_auto_exit_fraction", 0.2);
+    let recordsExited = 0;
+    if (missingEmployees.length > 0) {
+      if (exceedsMassExitThreshold(missingEmployees.length, activeResult.recordset.length, maxAutoExitFraction)) {
+        const missingFraction = missingEmployees.length / activeResult.recordset.length;
+        await issue({
+          severity: "HIGH",
+          issueType: "MASS_EMPLOYEE_ABSENCE",
+          description: `${missingEmployees.length} of ${activeResult.recordset.length} currently-active employees (${Math.round(missingFraction * 100)}%) are missing from this file - over the configured ${Math.round(maxAutoExitFraction * 100)}% safety threshold, so none were marked exited.`,
+          suggestedAction: "Confirm this file is the complete current roster before re-uploading. If this many real exits happened at once, set each employee's Left Date via Admin > Employees, or raise attrition.max_auto_exit_fraction in Configuration first.",
+        });
+      } else {
+        for (const emp of missingEmployees) {
+          await pool
+            .request()
+            .input("EmployeeId", sql.UniqueIdentifier, emp.EmployeeId)
+            .input("LeftDate", sql.Date, effectiveDate)
+            .query(`UPDATE [master].Employee SET IsActive = 0, LeftDate = @LeftDate, ModifiedAt = SYSUTCDATETIME() WHERE EmployeeId = @EmployeeId AND LeftDate IS NULL`);
+          recordsExited += 1;
+        }
       }
     }
 
@@ -314,12 +444,12 @@ export async function importEmployeeHierarchy(text: string, opts: ImportEmployee
       entityType: "Employee",
       action: "MASTER_DATA_IMPORT",
       referenceId: `IMPORT-${String(importRunId).padStart(8, "0")}`,
-      after: counts,
+      after: { ...counts, recordsExited, recordsTransferred },
       reason: `imported from ${opts.fileName}`,
     });
 
-    logger.info({ importRunId, ...counts, dataQualityIssueCount }, "Org hierarchy import complete");
-    return { importRunId, importCode: `IMPORT-${String(importRunId).padStart(8, "0")}`, ...counts, dataQualityIssueCount };
+    logger.info({ importRunId, ...counts, recordsExited, recordsTransferred, dataQualityIssueCount }, "Org hierarchy import complete");
+    return { importRunId, importCode: `IMPORT-${String(importRunId).padStart(8, "0")}`, ...counts, recordsExited, recordsTransferred, dataQualityIssueCount };
   } catch (err) {
     await importRepo.setImportRunStatus(importRunId, "FAILED", err instanceof Error ? err.message : String(err));
     throw err;

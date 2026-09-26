@@ -78,6 +78,11 @@ export const PERMISSION_CODES = [
   "workforce.planning.manage",
   "scenario.view",
   "scenario.manage",
+
+  // Attrition (build spec section 22, completed after Phase 10): view-only - Opening/Closing
+  // HC, Joiners, Exits, Transfers and Attrition Rate are all derived on read from
+  // master.Employee/EmployeeTransfer, nothing here is submitted or approved.
+  "attrition.view",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];

@@ -37,6 +37,7 @@ operate the migration runner.
 | `intraday` | `CapacityAdjustmentRequest` | Overtime and VTO (incl. early release) share one table, one `RequestType` discriminator - see `documentation/intraday.md` |
 | `workforce` | `WorkforcePlan` | Versioned monthly HC target + planned hires/exits, any combination of Department/Process/Location/Designation - see `documentation/workforce.md` |
 | `workforce` | `Scenario` | A saved what-if's input assumptions only - its projected outputs are computed on read, never stored - see `documentation/workforce.md` |
+| `master` | `EmployeeTransfer` | Append-only Department/Location/primary-Process change log - `Employee`'s own columns only ever hold the *current* value, so Attrition's Transfers count needs its own history - see `documentation/attrition.md` |
 
 `master.Employee` is loaded from the real org hierarchy sample via
 `npm run import:org-hierarchy --workspace=backend`

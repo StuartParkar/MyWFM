@@ -117,6 +117,17 @@ scenario's projected numbers are actually computed.
 | PATCH | `/api/workforce/scenarios/:id` | bearer + `scenario.manage` | Same body as POST |
 | DELETE | `/api/workforce/scenarios/:id` | bearer + `scenario.manage` | |
 
+## Endpoints (Attrition)
+
+See `documentation/attrition.md` for where the underlying join/exit/transfer
+dates actually come from.
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/api/attrition/summary` | bearer + `attrition.view` | `?from=&to=&departmentId=&processId=&locationId=&designationId=` - Opening/Closing HC, Joiners, Exits, Transfers, Attrition Rate |
+| GET | `/api/attrition/joiners-exits` | bearer + `attrition.view` | Same query - the individual employees behind the period's Joiners/Exits counts |
+| GET | `/api/attrition/transfers` | bearer + `attrition.view` | Same query - the individual Department/Location/primary-Process changes behind the period's Transfers count |
+
 Every future module's endpoints follow the
 same envelope, auth (`requireAuth`), authorization
 (`requirePermission("module.action")`) and validation (`zod`, surfaced as

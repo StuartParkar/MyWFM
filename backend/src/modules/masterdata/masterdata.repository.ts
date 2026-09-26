@@ -12,6 +12,8 @@ export interface EmployeeListItem {
   teamLeaderName: string | null;
   unitHodName: string | null;
   isActive: boolean;
+  joinDate: string | null;
+  leftDate: string | null;
 }
 
 export interface ListEmployeesParams {
@@ -56,6 +58,8 @@ export async function listEmployees(params: ListEmployeesParams): Promise<Pagina
       tl.FullName        AS teamLeaderName,
       hod.FullName       AS unitHodName,
       e.IsActive         AS isActive,
+      CONVERT(VARCHAR(10), e.JoinDate, 23) AS joinDate,
+      CONVERT(VARCHAR(10), e.LeftDate, 23) AS leftDate,
       COUNT(*) OVER()    AS TotalCount
     FROM [master].Employee e
     LEFT JOIN [master].Location loc ON loc.LocationId = e.LocationId

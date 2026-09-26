@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { Fragment, useCallback, useState } from "react";
 import type { ApiResponse, PaginatedResult } from "@mywfm/shared";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
@@ -20,6 +20,8 @@ interface EmployeeListItem {
   teamLeaderName: string | null;
   unitHodName: string | null;
   isActive: boolean;
+  joinDate: string | null;
+  leftDate: string | null;
 }
 
 interface IdNameRow {
@@ -33,7 +35,7 @@ function AddEmployeeForm({ onAdded }: { onAdded: () => void }) {
   const { authFetch } = useAuth();
   const [open, setOpen] = useState(false);
   const [lookups, setLookups] = useState<{ departments: IdNameRow[]; locations: IdNameRow[]; designations: IdNameRow[] } | null>(null);
-  const [form, setForm] = useState({ employeeCode: "", fullName: "", aliasName: "", departmentId: "", locationId: "", designationId: "" });
+  const [form, setForm] = useState({ employeeCode: "", fullName: "", aliasName: "", departmentId: "", locationId: "", designationId: "", joinDate: "" });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -71,6 +73,7 @@ function AddEmployeeForm({ onAdded }: { onAdded: () => void }) {
         departmentId: form.departmentId ? Number(form.departmentId) : null,
         locationId: form.locationId ? Number(form.locationId) : null,
         designationId: form.designationId ? Number(form.designationId) : null,
+        joinDate: form.joinDate || null,
       }),
     });
     setSubmitting(false);
@@ -79,7 +82,7 @@ function AddEmployeeForm({ onAdded }: { onAdded: () => void }) {
       setFormError(!body.success ? body.error.message : "Could not add employee.");
       return;
     }
-    setForm({ employeeCode: "", fullName: "", aliasName: "", departmentId: "", locationId: "", designationId: "" });
+    setForm({ employeeCode: "", fullName: "", aliasName: "", departmentId: "", locationId: "", designationId: "", joinDate: "" });
     setOpen(false);
     onAdded();
   }
@@ -135,6 +138,10 @@ function AddEmployeeForm({ onAdded }: { onAdded: () => void }) {
               ))}
             </select>
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-ink-muted">Join Date (if known)</span>
+            <input type="date" value={form.joinDate} onChange={(e) => setForm({ ...form, joinDate: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink outline-none focus:border-accent" />
+          </label>
           <div className="col-span-full flex items-center gap-3">
             <Button type="submit" disabled={submitting}>
               Save
@@ -178,6 +185,27 @@ export default function EmployeesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isActive: !emp.isActive }),
     });
+    reload();
+  }
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [dateForm, setDateForm] = useState({ joinDate: "", leftDate: "" });
+  const [dateSaving, setDateSaving] = useState(false);
+
+  function startEditingDates(emp: EmployeeListItem) {
+    setEditingId(emp.employeeId);
+    setDateForm({ joinDate: emp.joinDate ?? "", leftDate: emp.leftDate ?? "" });
+  }
+
+  async function saveDates(employeeId: string) {
+    setDateSaving(true);
+    await authFetch(`/api/master-data/employees/${employeeId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ joinDate: dateForm.joinDate || null, leftDate: dateForm.leftDate || null }),
+    });
+    setDateSaving(false);
+    setEditingId(null);
     reload();
   }
 
@@ -226,33 +254,79 @@ export default function EmployeesPage() {
                   <th className="px-4 py-3 font-medium">Team Leader</th>
                   <th className="px-4 py-3 font-medium">Unit HOD</th>
                   <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Join / Left</th>
                   <th className="px-4 py-3 font-medium" />
                 </tr>
               </thead>
               <tbody>
                 {result.items.map((emp) => (
-                  <tr key={emp.employeeId} className="border-b border-line last:border-0">
-                    <td className="px-4 py-3">
-                      <div className="text-ink">{emp.fullName}</div>
-                      <div className="text-xs text-ink-faint">
-                        #{emp.employeeCode}
-                        {emp.aliasName ? ` · ${emp.aliasName}` : ""}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-ink-muted">{emp.departmentName ?? "—"}</td>
-                    <td className="px-4 py-3 text-ink-muted">{emp.locationName ?? "—"}</td>
-                    <td className="px-4 py-3 text-ink-muted">{emp.designationName ?? "—"}</td>
-                    <td className="px-4 py-3 text-ink-muted">{emp.teamLeaderName ?? "—"}</td>
-                    <td className="px-4 py-3 text-ink-muted">{emp.unitHodName ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      <Badge tone={emp.isActive ? "success" : "neutral"}>{emp.isActive ? "Active" : "Inactive"}</Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Button variant="ghost" onClick={() => toggleActive(emp)}>
-                        {emp.isActive ? "Deactivate" : "Activate"}
-                      </Button>
-                    </td>
-                  </tr>
+                  <Fragment key={emp.employeeId}>
+                    <tr className="border-b border-line last:border-0">
+                      <td className="px-4 py-3">
+                        <div className="text-ink">{emp.fullName}</div>
+                        <div className="text-xs text-ink-faint">
+                          #{emp.employeeCode}
+                          {emp.aliasName ? ` · ${emp.aliasName}` : ""}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-ink-muted">{emp.departmentName ?? "—"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{emp.locationName ?? "—"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{emp.designationName ?? "—"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{emp.teamLeaderName ?? "—"}</td>
+                      <td className="px-4 py-3 text-ink-muted">{emp.unitHodName ?? "—"}</td>
+                      <td className="px-4 py-3">
+                        <Badge tone={emp.isActive ? "success" : "neutral"}>{emp.isActive ? "Active" : "Inactive"}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-ink-faint">
+                        {emp.joinDate ?? "—"} / {emp.leftDate ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <Button variant="ghost" onClick={() => startEditingDates(emp)}>
+                            Edit dates
+                          </Button>
+                          <Button variant="ghost" onClick={() => toggleActive(emp)}>
+                            {emp.isActive ? "Deactivate" : "Activate"}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                    {editingId === emp.employeeId && (
+                      <tr className="border-b border-line bg-canvas last:border-0">
+                        <td colSpan={9} className="px-4 py-3">
+                          <div className="flex flex-wrap items-end gap-3">
+                            <label className="flex flex-col gap-1">
+                              <span className="text-xs font-medium text-ink-muted">Join Date</span>
+                              <input
+                                type="date"
+                                value={dateForm.joinDate}
+                                onChange={(e) => setDateForm((f) => ({ ...f, joinDate: e.target.value }))}
+                                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-1">
+                              <span className="text-xs font-medium text-ink-muted">Left Date</span>
+                              <input
+                                type="date"
+                                value={dateForm.leftDate}
+                                onChange={(e) => setDateForm((f) => ({ ...f, leftDate: e.target.value }))}
+                                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
+                              />
+                            </label>
+                            <Button onClick={() => saveDates(emp.employeeId)} disabled={dateSaving}>
+                              {dateSaving ? "Saving..." : "Save"}
+                            </Button>
+                            <Button variant="ghost" onClick={() => setEditingId(null)}>
+                              Cancel
+                            </Button>
+                          </div>
+                          <p className="mt-2 text-xs text-ink-faint">
+                            A real HR-confirmed date entered here always takes precedence over the org-hierarchy import&apos;s own first-seen/last-seen inference - see documentation/attrition.md.
+                          </p>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

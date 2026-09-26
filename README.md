@@ -92,8 +92,10 @@ Phase N" screen instead of a fake one
       Seasonality Factor x Holiday Factor, deterministic, not AI) is built and
       live at `/workforce/forecast`, honestly reporting "insufficient
       history" rather than a guess wherever the real imported call history
-      doesn't yet cover a date. Attrition still needs employee join/leave
-      dates, promised but not yet provided. See `documentation/formulas.md`.
+      doesn't yet cover a date. Attrition (section 22) was deferred here at
+      the time - the org-hierarchy source file had no join/leave-date
+      column at all - and completed later; see the Attrition entry below.
+      See `documentation/formulas.md`.
 - [x] **Phase 8 - Control Tower & reporting**: the Control Tower's 12 KPI
       cards (`/control-tower`) replace Phase 1's all-dashes placeholder,
       computed company-wide against the Global Filter Bar's date range +
@@ -137,7 +139,18 @@ Phase N" screen instead of a fake one
       every projected number is recomputed on read with Phase 7's own
       formulas and never written anywhere, "never touches live data" taken
       literally. See `documentation/workforce.md`.
-- [ ] **Phase 11 - Audit/lineage**: reprocessing, system health history, backup/restore automation.
+- [x] **Attrition** (build spec section 22, completed after Phase 10):
+      Opening/Closing HC, Joiners, Exits, Transfers and Attrition Rate
+      (`/operations/attrition`) - unblocked without inventing any data.
+      `master.Employee.JoinDate`/`LeftDate` (real columns since Phase 2,
+      never populated) are now set by the org-hierarchy importer itself
+      (first-seen on a new employee code, last-seen-then-missing on a
+      later re-import, capped by `attrition.max_auto_exit_fraction` so a
+      partial/wrong file is never mistaken for mass attrition) or entered
+      manually via Admin > Employees (always wins over the importer's own
+      inference). A new `master.EmployeeTransfer` log captures
+      Department/Location/primary-Process changes, which `Employee`'s own
+      current-value columns can't. See `documentation/attrition.md`.
 - [ ] **Phase 11 - Audit/lineage**: reprocessing, system health history, backup/restore automation.
 - [ ] **Phase 12 - Hardening**: performance, security, tests, deployment package.
 

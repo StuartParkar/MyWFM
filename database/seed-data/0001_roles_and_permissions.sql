@@ -64,7 +64,8 @@ USING (VALUES
     ('workforce.planning.view',   'workforce', 'View Workforce Planning (current/required/future HC, hiring gap).'),
     ('workforce.planning.manage', 'workforce', 'Create/edit Workforce Plan targets.'),
     ('scenario.view',       'workforce', 'View saved what-if scenarios.'),
-    ('scenario.manage',     'workforce', 'Create/edit what-if scenarios (never touches live data).')
+    ('scenario.manage',     'workforce', 'Create/edit what-if scenarios (never touches live data).'),
+    ('attrition.view',      'attrition', 'View Opening/Closing HC, Joiners, Exits, Transfers and Attrition Rate.')
 ) AS source (PermissionCode, ModuleName, Description)
 ON target.PermissionCode = source.PermissionCode
 WHEN MATCHED THEN
@@ -93,7 +94,8 @@ USING (
             'shrinkage.view', 'shrinkage.manage', 'staffing.view', 'formula.view',
             'forecast.view', 'controltower.view',
             'intraday.view', 'intraday.manage', 'intraday.approve', 'intraday.request',
-            'workforce.planning.view', 'workforce.planning.manage', 'scenario.view', 'scenario.manage'
+            'workforce.planning.view', 'workforce.planning.manage', 'scenario.view', 'scenario.manage',
+            'attrition.view'
         )
     WHERE r.RoleCode = 'WFM'
 
@@ -104,7 +106,8 @@ USING (
     JOIN security.Permission p
         ON p.PermissionCode IN (
             'masterdata.view', 'roster.view', 'roster.review.hod', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view', 'forecast.view', 'controltower.view',
-            'intraday.view', 'intraday.approve', 'workforce.planning.view', 'scenario.view'
+            'intraday.view', 'intraday.approve', 'workforce.planning.view', 'scenario.view',
+            'attrition.view'
         )
     WHERE r.RoleCode = 'HOD'
 
@@ -115,7 +118,8 @@ USING (
     JOIN security.Permission p
         ON p.PermissionCode IN (
             'masterdata.view', 'roster.view', 'roster.review.leader', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view', 'forecast.view', 'controltower.view',
-            'intraday.view', 'intraday.manage', 'intraday.request', 'workforce.planning.view'
+            'intraday.view', 'intraday.manage', 'intraday.request', 'workforce.planning.view',
+            'attrition.view'
         )
     WHERE r.RoleCode = 'LEADER'
 

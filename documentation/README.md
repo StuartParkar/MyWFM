@@ -17,6 +17,7 @@
 | [`controltower.md`](./controltower.md) | The Control Tower's 12 KPIs, why they use two different filter scopes, and Explain This Number |
 | [`intraday.md`](./intraday.md) | Interval-bucketing engine, Break Management, the exception engine and OT/VTO |
 | [`workforce.md`](./workforce.md) | Workforce Planning (Current/Required/Future HC, Hiring Gap) and Scenario Planning |
+| [`attrition.md`](./attrition.md) | Opening/Closing HC, Joiners, Exits, Transfers, Attrition Rate - and where the join/exit dates actually come from |
 | [`reports.md`](./reports.md) | The six period-comparison Reports screens and Custom Reports' ad-hoc Ledger query tool |
 | [`imports.md`](./imports.md) | Import Center - the org-hierarchy and calls pipelines |
 | [`phone-system-mapping.md`](./phone-system-mapping.md) | Phone-system source mappings (Vonage, Elevate, RingCentral) |
