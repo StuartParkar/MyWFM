@@ -37,6 +37,14 @@ export const PERMISSION_CODES = [
   "import.view",
   "import.execute",
   "dataquality.view",
+
+  // Roster workflow (Phase 4)
+  "roster.view",
+  "roster.submit",
+  "roster.review.leader",
+  "roster.review.hod",
+  "roster.review.wfm",
+  "roster.change",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];

@@ -24,6 +24,9 @@ operate the migration runner.
 | `master` | `Holiday`, `WeeklyOffPattern`, `ReasonCode` | Holiday calendar (real UI), and two lookups later phases populate categories into |
 | `import` | `ImportRun` | One row per upload/CLI run, displayed as an `IMPORT-00000001`-style code |
 | `import` | `DataQualityIssue` | One row per anomaly an import finds (severity, type, suggested action, status) - see `documentation/imports.md` |
+| `roster` | `RosterRequirement`, `RosterRequirementAction`, `RosterRequirementAssignment` | The requirement + its full approval audit trail + proposed assignments - see `documentation/roster.md` |
+| `roster` | `PublishedRoster` | The official roster, versioned - one active row per employee/date (`UX_PublishedRoster_ActiveSlot` filtered unique index), same never-overwrite discipline as `config.ConfigurationSetting` |
+| `roster` | `RosterChange` | Confirmed shift/weekly-off changes outside the requirement workflow, with before/after `PublishedRoster` links |
 
 `master.Employee` is loaded from the real org hierarchy sample via
 `npm run import:org-hierarchy --workspace=backend`
@@ -71,6 +74,7 @@ procedure-worthy" versus staying as parameterized SQL in a repository file.
 `config.ConfigurationSetting` enforces "exactly one active version per key" at
 the database level (a filtered unique index), not just in application code -
 changing a setting always inserts a new `Version` row rather than overwriting
-one in place. The same discipline (never overwrite, always version) will
-apply to `CALC-*` formula versions and roster versions once Phases 4 and 7
-build them.
+one in place. `roster.PublishedRoster` now applies the identical pattern
+(`UX_PublishedRoster_ActiveSlot`, `WHERE IsActive = 1`) - publishing a change
+deactivates the previous row instead of overwriting it. The same discipline
+will apply to `CALC-*` formula versions once Phase 7 builds them.

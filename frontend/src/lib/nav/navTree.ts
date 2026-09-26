@@ -41,11 +41,11 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Roster",
     items: [
-      { label: "Requirements", path: "/roster/requirements", available: false, phase: 4, description: "Roster requirement submission by process/department/shift/location." },
-      { label: "Review", path: "/roster/review", available: false, phase: 4, description: "Leader and HOD review of submitted roster requirements." },
-      { label: "Approvals", path: "/roster/approvals", available: false, phase: 4, description: "The Requestor -> Leader -> HOD -> WFM approval workflow and its SLAs." },
-      { label: "Published Roster", path: "/roster/published", available: false, phase: 4, description: "The official, versioned published roster." },
-      { label: "Roster Changes", path: "/roster/changes", available: false, phase: 4, description: "Shift/weekly-off changes with full before/after audit and the change-impact simulator." },
+      { label: "Requirements", path: "/roster/requirements", available: true, phase: 4, description: "Roster requirement submission by process/department/shift/location." },
+      { label: "Review", path: "/roster/review", available: true, phase: 4, description: "Leader and HOD review of submitted roster requirements." },
+      { label: "Approvals", path: "/roster/approvals", available: true, phase: 4, description: "The Requestor -> Leader -> HOD -> WFM approval workflow and its SLAs." },
+      { label: "Published Roster", path: "/roster/published", available: true, phase: 4, description: "The official, versioned published roster." },
+      { label: "Roster Changes", path: "/roster/changes", available: true, phase: 4, description: "Shift/weekly-off changes with full before/after audit and the change-impact simulator." },
       { label: "Calendar", path: "/roster/calendar", available: false, phase: 8, description: "Unified WFM calendar: roster, attendance, holidays, forecast, staffing, exceptions in one view." },
     ],
   },

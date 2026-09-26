@@ -11,7 +11,7 @@ Base path: `/api`. Every response is one of the two shapes in
 `errorId` correlates to a server-side log line with full technical detail -
 never expect (or parse) more detail from the response body itself.
 
-## Endpoints (Phase 1)
+## Endpoints (Phases 1-4)
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
@@ -40,8 +40,18 @@ never expect (or parse) more detail from the response body itself.
 | POST | `/api/imports/org-hierarchy?fileName=` | bearer + `import.execute` | Body is the raw file text (not JSON) - runs the org-hierarchy pipeline |
 | GET | `/api/imports/data-quality` | bearer + `dataquality.view` | Paginated, `?status=OPEN\|ACKNOWLEDGED\|RESOLVED\|IGNORED` |
 | PATCH | `/api/imports/data-quality/:id` | bearer + `dataquality.view` | Body `{ status }` - resolve/acknowledge/ignore a finding |
+| GET | `/api/roster/requirements` | bearer + `roster.view` | Paginated, `?status=&from=&to=` |
+| GET | `/api/roster/requirements/:id` | bearer + `roster.view` | Returns `{ requirement, actions, assignments }` - the full detail + decision timeline |
+| POST | `/api/roster/requirements` | bearer + `roster.submit` | Creates a requirement in status `SUBMITTED` |
+| POST | `/api/roster/requirements/:id/review` | bearer + `roster.view` (permission decided by the requirement's current status - see `documentation/roster.md`) | Body `{ decision: "APPROVE"\|"REJECT"\|"SEND_BACK", comments? }` |
+| POST | `/api/roster/requirements/:id/assignments` | bearer + `roster.review.leader` | Body `{ employeeId }` - proposes an employee to fill the requirement |
+| DELETE | `/api/roster/requirements/:id/assignments/:employeeId` | bearer + `roster.review.leader` | Removes a proposed assignment |
+| GET | `/api/roster/published` | bearer + `roster.view` | `?from=&to=` (both required), paginated - the active `PublishedRoster` rows |
+| GET | `/api/roster/change-impact` | bearer + `roster.change` | `?employeeId=&businessDate=&newShiftId=` - read-only Change Impact Simulator, writes nothing |
+| POST | `/api/roster/changes` | bearer + `roster.change` | Body `{ employeeId, businessDate, newShiftId, reason }` - confirms a shift change |
+| GET | `/api/roster/changes` | bearer + `roster.view` | Paginated history of confirmed roster changes |
 
-Every future module's endpoints (`/api/roster`, `/api/calls`, ...) follow the
+Every future module's endpoints (`/api/calls`, ...) follow the
 same envelope, auth (`requireAuth`), authorization
 (`requirePermission("module.action")`) and validation (`zod`, surfaced as
 `fieldErrors`) pattern - see `backend/src/modules/auth` as the reference

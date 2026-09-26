@@ -11,6 +11,7 @@
 | [`backup-restore.md`](./backup-restore.md) | Using `scripts/backup-mywfm.*` and `scripts/restore-mywfm.*` |
 | [`testing.md`](./testing.md) | What's tested today and how to run it |
 | [`troubleshooting.md`](./troubleshooting.md) | Common failure modes and what to check |
+| [`roster.md`](./roster.md) | Roster requirement/approval/publication workflow and the Change Impact Simulator |
 | [`formulas.md`](./formulas.md) | Formula & Rule Library - stub until Phase 7 |
 | [`imports.md`](./imports.md) | Import Center - stub until Phase 3 |
 | [`phone-system-mapping.md`](./phone-system-mapping.md) | Phone-system source mappings - stub until Phase 6 |

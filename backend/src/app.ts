@@ -15,6 +15,7 @@ import { jobsRouter } from "./modules/jobs/jobs.routes.js";
 import { masterDataRouter } from "./modules/masterdata/masterdata.routes.js";
 import { usersRouter } from "./modules/users/users.routes.js";
 import { importsRouter } from "./modules/imports/import.routes.js";
+import { rosterRouter } from "./modules/roster/roster.routes.js";
 
 export function createApp() {
   const app = express();
@@ -42,6 +43,7 @@ export function createApp() {
   app.use("/api/master-data", masterDataRouter);
   app.use("/api/users", usersRouter);
   app.use("/api/imports", importsRouter);
+  app.use("/api/roster", rosterRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

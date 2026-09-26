@@ -49,7 +49,14 @@ Phase N" screen instead of a fake one
       or `npm run import:org-hierarchy --workspace=backend`). No other source
       type exists yet - Calls stays unbuilt until real phone-system files
       arrive (section 76).
-- [ ] **Phase 4 - Roster**: requirement, approval workflow, versioning, publication.
+- [x] **Phase 4 - Roster**: requirement submission, the Requestor -> Leader ->
+      HOD -> WFM approval workflow (permission checked against the
+      requirement's current status, not just the route), versioned
+      publication (`PublishedRoster`, same never-overwrite discipline as
+      `config.ConfigurationSetting`), and a read-only Change Impact Simulator
+      for shift changes. Admin/Requirements/Review/Approvals/Published
+      Roster/Roster Changes screens are wired to real data - see
+      `documentation/roster.md`.
 - [ ] **Phase 5 - Attendance & Business Day Engine**.
 - [ ] **Phase 6 - Calls**: universal call model, per-phone-system mapping, aggregation.
 - [ ] **Phase 7 - Formula engine**: calculation ledger, staffing, shrinkage,
