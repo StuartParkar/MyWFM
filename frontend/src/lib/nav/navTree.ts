@@ -86,8 +86,8 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Import Center", path: "/data/import-center", available: true, phase: 3, description: "Upload -> staging -> validation -> normalization -> data quality -> merge, with a unique Import ID per file." },
       { label: "Data Quality", path: "/data/data-quality", available: true, phase: 3, description: "Detected data-quality issues by severity, source and record, with a suggested corrective path." },
-      { label: "Data Lineage", path: "/data/data-lineage", available: false, phase: 11, description: "KPI -> calculation -> formula version -> normalized data -> import -> original file." },
-      { label: "Reprocessing", path: "/data/reprocessing", available: false, phase: 11, description: "Authorized reprocessing by date/process/department/queue/agent/import/calculation type." },
+      { label: "Data Lineage", path: "/data/data-lineage", available: true, phase: 11, description: "KPI -> calculation -> formula version -> normalized inputs -> import (when the calculation is genuinely import-derived) -> original file." },
+      { label: "Reprocessing", path: "/data/reprocessing", available: true, phase: 11, description: "Authorized, reasoned, audited recalculation by date range and (per calculation type) process/department/queue." },
     ],
   },
   {
@@ -110,7 +110,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "System Health", path: "/system/health", available: true, phase: 1, description: "Database connectivity and background job queue depth." },
       { label: "Jobs", path: "/system/jobs", available: true, phase: 1, description: "Background job queue status." },
-      { label: "Backup / Restore", path: "/system/backup-restore", available: false, phase: 11, description: "Guided backup/restore against scripts/backup-mywfm.ps1 and restore-mywfm.ps1." },
+      { label: "Backup / Restore", path: "/system/backup-restore", available: true, phase: 11, description: "A real, automated backup (scripts/backup-mywfm.sh via the background job queue) plus a guided restore runbook - restore itself is never web-automated." },
     ],
   },
 ];

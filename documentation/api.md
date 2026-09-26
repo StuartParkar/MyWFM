@@ -128,6 +128,20 @@ dates actually come from.
 | GET | `/api/attrition/joiners-exits` | bearer + `attrition.view` | Same query - the individual employees behind the period's Joiners/Exits counts |
 | GET | `/api/attrition/transfers` | bearer + `attrition.view` | Same query - the individual Department/Location/primary-Process changes behind the period's Transfers count |
 
+## Endpoints (Phase 11 - Data Lineage, Reprocessing, System Health history, Backup/Restore)
+
+See `documentation/lineage-and-reprocessing.md` and
+`documentation/backup-restore.md`.
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/api/formulas/ledger/:id` | bearer + `formula.view` | One Calculation Ledger row's full `inputsSnapshot`, plus the real import run(s) named by `sourceReference` when it's set (Calls-derived formulas only today) |
+| GET | `/api/system-health/history` | bearer + `system.health.view` | `?from=&to=` (default: trailing 24h) - persisted `system.HealthSnapshot` rows, sampled every `system.health_snapshot_interval_minutes` |
+| GET | `/api/reprocessing` | bearer + `reprocessing.view` | `?page=&pageSize=` - reprocessing request history |
+| POST | `/api/reprocessing` | bearer + `reprocessing.execute` | Body: one of the 7 `calculationType` variants (see `reprocessing.validation.ts`) - `{ calculationType, from, to, reason, ...dimensionFilters }`. Always returns 201 with the request row (`status: COMPLETED \| FAILED`), never a 500 for a failed recomputation - the failure itself is the recorded, honest result |
+| POST | `/api/backup/run` | bearer + `backup.execute` | Enqueues a real `scripts/backup-mywfm.sh` run via the background job queue |
+| GET | `/api/backup/runs` | bearer + `backup.view` | Real `system.BackgroundJob` rows for `JobType = 'RUN_BACKUP'`, including each completed run's manifest |
+
 Every future module's endpoints follow the
 same envelope, auth (`requireAuth`), authorization
 (`requirePermission("module.action")`) and validation (`zod`, surfaced as

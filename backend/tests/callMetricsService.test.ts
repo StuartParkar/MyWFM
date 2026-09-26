@@ -19,6 +19,7 @@ function rawRow(overrides: Partial<{
   abandonedCalls: number;
   answeredHandleSecondsSum: number;
   answeredWithinThreshold: number;
+  importRunIds: number[];
 }>) {
   return {
     businessDate: "2026-09-25",
@@ -31,6 +32,7 @@ function rawRow(overrides: Partial<{
     abandonedCalls: 20,
     answeredHandleSecondsSum: 80 * 300,
     answeredWithinThreshold: 60,
+    importRunIds: [1],
     ...overrides,
   };
 }
@@ -56,7 +58,7 @@ describe("listByQueue", () => {
       serviceLevelPct: 60, // 60/100 * 100 (denominator is Offered, not Answered)
       workloadHours: round2((100 * 300) / 3600),
     });
-    expect(recordCalculation).toHaveBeenCalledWith(expect.objectContaining({ formulaCode: "ANSWER_RATE_PCT", entityType: "Queue", entityId: "1", computedValue: 80 }));
+    expect(recordCalculation).toHaveBeenCalledWith(expect.objectContaining({ formulaCode: "ANSWER_RATE_PCT", entityType: "Queue", entityId: "1", computedValue: 80, sourceReference: "IMPORT-00000001" }));
     expect(recordCalculation).toHaveBeenCalledWith(expect.objectContaining({ formulaCode: "AHT_SECONDS", computedValue: 300 }));
     expect(recordCalculation).toHaveBeenCalledWith(expect.objectContaining({ formulaCode: "WORKLOAD_HOURS" }));
     // Raw counts are not their own ledger entries - only the derived ratios are (matches
@@ -80,8 +82,8 @@ describe("listByProcess", () => {
     // queues' own answer rates (50% and 100%) would wrongly give 75% - summing first gives
     // the true rate: 100 answered / 150 offered = 66.67%.
     listCallMetricsRaw.mockResolvedValue([
-      rawRow({ queueId: 1, queueName: "Queue A", offeredCalls: 100, answeredCalls: 50, abandonedCalls: 50, answeredHandleSecondsSum: 50 * 200, answeredWithinThreshold: 40 }),
-      rawRow({ queueId: 2, queueName: "Queue B", offeredCalls: 50, answeredCalls: 50, abandonedCalls: 0, answeredHandleSecondsSum: 50 * 400, answeredWithinThreshold: 45 }),
+      rawRow({ queueId: 1, queueName: "Queue A", offeredCalls: 100, answeredCalls: 50, abandonedCalls: 50, answeredHandleSecondsSum: 50 * 200, answeredWithinThreshold: 40, importRunIds: [1] }),
+      rawRow({ queueId: 2, queueName: "Queue B", offeredCalls: 50, answeredCalls: 50, abandonedCalls: 0, answeredHandleSecondsSum: 50 * 400, answeredWithinThreshold: 45, importRunIds: [2] }),
     ]);
 
     const [row] = await listByProcess({ from: "2026-09-25", to: "2026-09-25" });
@@ -93,7 +95,9 @@ describe("listByProcess", () => {
       answerRatePct: round2((100 / 150) * 100),
       ahtSeconds: round2((50 * 200 + 50 * 400) / 100),
     });
-    expect(recordCalculation).toHaveBeenCalledWith(expect.objectContaining({ formulaCode: "ANSWER_RATE_PCT", entityType: "Process", entityId: "10" }));
+    // Source Reference (Data Lineage, build spec section 23) unions the real import runs behind
+    // every queue rolled into this process bucket - not just the first queue's own.
+    expect(recordCalculation).toHaveBeenCalledWith(expect.objectContaining({ formulaCode: "ANSWER_RATE_PCT", entityType: "Process", entityId: "10", sourceReference: "IMPORT-00000001,IMPORT-00000002" }));
   });
 
   it("excludes a queue with no Process assigned rather than guessing which process its workload belongs to", async () => {

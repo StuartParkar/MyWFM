@@ -8,7 +8,7 @@
 | [`api.md`](./api.md) | REST API conventions and the current endpoint list |
 | [`configuration.md`](./configuration.md) | Environment variables vs. versioned application configuration |
 | [`deployment.md`](./deployment.md) | Local dev, Docker Compose, and production deployment |
-| [`backup-restore.md`](./backup-restore.md) | Using `scripts/backup-mywfm.*` and `scripts/restore-mywfm.*` |
+| [`backup-restore.md`](./backup-restore.md) | Using `scripts/backup-mywfm.*`/`scripts/restore-mywfm.*`, and the guided Backup/Restore screen that automates backup (not restore) on top of them |
 | [`testing.md`](./testing.md) | What's tested today and how to run it |
 | [`troubleshooting.md`](./troubleshooting.md) | Common failure modes and what to check |
 | [`roster.md`](./roster.md) | Roster requirement/approval/publication workflow and the Change Impact Simulator |
@@ -18,6 +18,7 @@
 | [`intraday.md`](./intraday.md) | Interval-bucketing engine, Break Management, the exception engine and OT/VTO |
 | [`workforce.md`](./workforce.md) | Workforce Planning (Current/Required/Future HC, Hiring Gap) and Scenario Planning |
 | [`attrition.md`](./attrition.md) | Opening/Closing HC, Joiners, Exits, Transfers, Attrition Rate - and where the join/exit dates actually come from |
+| [`lineage-and-reprocessing.md`](./lineage-and-reprocessing.md) | Data Lineage's InputsSnapshot/SourceReference drilldown, and authorized/audited on-demand Reprocessing |
 | [`reports.md`](./reports.md) | The six period-comparison Reports screens and Custom Reports' ad-hoc Ledger query tool |
 | [`imports.md`](./imports.md) | Import Center - the org-hierarchy and calls pipelines |
 | [`phone-system-mapping.md`](./phone-system-mapping.md) | Phone-system source mappings (Vonage, Elevate, RingCentral) |

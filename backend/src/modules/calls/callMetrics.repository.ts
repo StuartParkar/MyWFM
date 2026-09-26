@@ -19,6 +19,9 @@ export interface CallMetricsRawRow {
   abandonedCalls: number;
   answeredHandleSecondsSum: number;
   answeredWithinThreshold: number;
+  /** The real ImportRunId(s) behind this bucket's rows (calls.QueueIntervalCall.ImportRunId) -
+   * Data Lineage's Source Reference (build spec section 23), never fabricated. */
+  importRunIds: number[];
 }
 
 export async function listCallMetricsRaw(params: {
@@ -47,6 +50,7 @@ export async function listCallMetricsRaw(params: {
       AbandonedCalls: number;
       AnsweredHandleSecondsSum: number | null;
       AnsweredWithinThreshold: number;
+      ImportRunIds: string | null;
     }>(`
       SELECT
         CONVERT(VARCHAR(10), q.BusinessDate, 23) AS BusinessDate,
@@ -57,7 +61,8 @@ export async function listCallMetricsRaw(params: {
         SUM(CASE WHEN q.Disposition = 'ANSWERED'
               THEN COALESCE(q.HandleSeconds, q.TalkSeconds + ISNULL(q.HoldSeconds, 0) + ISNULL(q.ACWSeconds, 0))
               ELSE 0 END) AS AnsweredHandleSecondsSum,
-        SUM(CASE WHEN q.Disposition = 'ANSWERED' AND q.WaitSeconds IS NOT NULL AND q.WaitSeconds <= @Threshold THEN 1 ELSE 0 END) AS AnsweredWithinThreshold
+        SUM(CASE WHEN q.Disposition = 'ANSWERED' AND q.WaitSeconds IS NOT NULL AND q.WaitSeconds <= @Threshold THEN 1 ELSE 0 END) AS AnsweredWithinThreshold,
+        STRING_AGG(DISTINCT CAST(q.ImportRunId AS VARCHAR(20)), ',') AS ImportRunIds
       FROM [calls].QueueIntervalCall q
       LEFT JOIN [master].Queue mq ON mq.QueueId = q.QueueId
       LEFT JOIN [master].Process mp ON mp.ProcessId = mq.ProcessId
@@ -78,5 +83,6 @@ export async function listCallMetricsRaw(params: {
     abandonedCalls: r.AbandonedCalls,
     answeredHandleSecondsSum: r.AnsweredHandleSecondsSum ?? 0,
     answeredWithinThreshold: r.AnsweredWithinThreshold,
+    importRunIds: r.ImportRunIds ? r.ImportRunIds.split(",").map(Number) : [],
   }));
 }

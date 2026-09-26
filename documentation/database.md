@@ -38,6 +38,8 @@ operate the migration runner.
 | `workforce` | `WorkforcePlan` | Versioned monthly HC target + planned hires/exits, any combination of Department/Process/Location/Designation - see `documentation/workforce.md` |
 | `workforce` | `Scenario` | A saved what-if's input assumptions only - its projected outputs are computed on read, never stored - see `documentation/workforce.md` |
 | `master` | `EmployeeTransfer` | Append-only Department/Location/primary-Process change log - `Employee`'s own columns only ever hold the *current* value, so Attrition's Transfers count needs its own history - see `documentation/attrition.md` |
+| `system` | `HealthSnapshot` | Periodic (`system.health_snapshot_interval_minutes`) persisted sample of the same check `GET /api/system-health/detail` runs live - System Health's History view - see `documentation/lineage-and-reprocessing.md` |
+| `system` | `ReprocessingRequest` | Authorized, reasoned, audited record of an on-demand recalculation - who/what scope/why/result. `system.BackgroundJob` (`JobType = 'RUN_BACKUP'`) doubles as the backup run log, no new table needed there - see `documentation/lineage-and-reprocessing.md` |
 
 `master.Employee` is loaded from the real org hierarchy sample via
 `npm run import:org-hierarchy --workspace=backend`

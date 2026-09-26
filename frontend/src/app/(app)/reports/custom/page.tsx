@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import type { ApiResponse, PaginatedResult } from "@mywfm/shared";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
@@ -134,6 +135,7 @@ export default function CustomReportsPage() {
                   <th className="px-4 py-3 font-medium">Value</th>
                   <th className="px-4 py-3 font-medium">Source</th>
                   <th className="px-4 py-3 font-medium">Computed At</th>
+                  <th className="px-4 py-3 font-medium" />
                 </tr>
               </thead>
               <tbody>
@@ -146,6 +148,11 @@ export default function CustomReportsPage() {
                     <td className="px-4 py-3 text-ink tabular-nums">{row.computedValue}</td>
                     <td className="px-4 py-3 text-ink-muted">{row.sourceReference ?? "—"}</td>
                     <td className="px-4 py-3 text-ink-faint">{new Date(row.computedAt).toLocaleString()}</td>
+                    <td className="px-4 py-3">
+                      <Link href={`/data/data-lineage?id=${encodeURIComponent(row.calculationCode)}`} className="text-xs font-medium text-accent hover:underline">
+                        View lineage
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

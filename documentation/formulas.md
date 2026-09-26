@@ -37,15 +37,20 @@ code (`toCalculationCode`, the same `padStart(8, "0")` convention as
 - `EntityType`/`EntityId`/`BusinessDate` - what the calculation is about.
 - `ComputedValue` and `InputsSnapshot` (JSON) - the number and what produced it.
 - `SourceReference` - the build spec's "Source Data Version" (e.g. an
-  `IMPORT-*` code). **Always null today**: Shrinkage and Staffing both compute
-  from manually entered/roster data, not an import run, so there is nothing
-  real to cite. A future formula computed from imported data (Calls, once it
-  has one) would populate this.
+  `IMPORT-*` code). **Null for Shrinkage, Staffing, Forecast and Attrition
+  Rate**: all four compute from manually entered/roster/employee-master data,
+  not a specific import run, so there is honestly nothing to cite. **Real
+  since Phase 11 for Calls-derived formulas**: `calls.QueueIntervalCall`/
+  `AgentIntervalCall`'s own `ImportRunId` (real since Phase 6, never threaded
+  through until now) is resolved into the real `IMPORT-*` code(s) behind each
+  computed bucket - see `documentation/lineage-and-reprocessing.md`.
 - `ComputedByUserId` - the user whose request triggered the computation.
   There is no scheduled/background calculation job yet (no cron
   infrastructure exists - see `documentation/troubleshooting.md` /
   `system.BackgroundJob`), so every ledger row today traces to a real person
-  loading a screen, not a fabricated `SYSTEM` actor.
+  loading a screen - or, since Phase 11, a real person's authorized,
+  reasoned Reprocessing request (`documentation/lineage-and-reprocessing.md`)
+  - never a fabricated `SYSTEM` actor.
 
 Values are computed **on read, every time** (Shrinkage and Staffing's list
 endpoints both write a ledger row as a side effect of answering the request),

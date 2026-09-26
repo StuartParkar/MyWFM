@@ -27,6 +27,8 @@ import { controlTowerRouter } from "./modules/controlTower/controlTower.routes.j
 import { intradayRouter } from "./modules/intraday/intraday.routes.js";
 import { workforceRouter } from "./modules/workforce/workforce.routes.js";
 import { attritionRouter } from "./modules/attrition/attrition.routes.js";
+import { backupRouter } from "./modules/backup/backup.routes.js";
+import { reprocessingRouter } from "./modules/reprocessing/reprocessing.routes.js";
 
 export function createApp() {
   const app = express();
@@ -66,6 +68,8 @@ export function createApp() {
   app.use("/api/intraday", intradayRouter);
   app.use("/api/workforce", workforceRouter);
   app.use("/api/attrition", attritionRouter);
+  app.use("/api/backup", backupRouter);
+  app.use("/api/reprocessing", reprocessingRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

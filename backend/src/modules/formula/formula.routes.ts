@@ -3,7 +3,9 @@ import { z } from "zod";
 import type { ApiSuccess } from "@mywfm/shared";
 import { requireAuth } from "../../middleware/auth.js";
 import { requirePermission } from "../../middleware/rbac.js";
+import { NotFoundError } from "../../errors/AppError.js";
 import * as repo from "./formula.repository.js";
+import { getCalculationLineage } from "./formula.service.js";
 
 export const formulaRouter = Router();
 
@@ -28,4 +30,13 @@ formulaRouter.get("/ledger", async (req, res) => {
   const input = ledgerQuerySchema.parse(req.query);
   const result = await repo.listCalculationHistory(input);
   res.json({ success: true, data: result } satisfies ApiSuccess<typeof result>);
+});
+
+/** Data Lineage (build spec section 23): one Calculation Ledger row's full InputsSnapshot plus,
+ * when SourceReference names one, the real import run(s) behind it. */
+formulaRouter.get("/ledger/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const lineage = await getCalculationLineage(id);
+  if (!lineage) throw new NotFoundError("Calculation not found.");
+  res.json({ success: true, data: lineage } satisfies ApiSuccess<typeof lineage>);
 });

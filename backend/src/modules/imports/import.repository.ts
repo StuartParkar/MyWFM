@@ -237,6 +237,39 @@ export async function listDataQualityIssues(page: number, pageSize: number, stat
   };
 }
 
+export interface ImportRunSummary {
+  importRunId: number;
+  importCode: string;
+  sourceSystem: string;
+  fileName: string;
+  status: ImportStatus;
+  uploadedAt: string;
+}
+
+/** Resolves a Calculation Ledger row's Source Reference back to the real import run(s) it names - Data Lineage (build spec section 23). */
+export async function getImportRunSummaries(importRunIds: number[]): Promise<ImportRunSummary[]> {
+  if (importRunIds.length === 0) return [];
+  const pool = await getPool();
+  const request = pool.request();
+  const placeholders = importRunIds.map((id, i) => {
+    request.input(`Id${i}`, sql.BigInt, id);
+    return `@Id${i}`;
+  });
+  const result = await request.query<{ ImportRunId: number; SourceSystem: string; FileName: string; Status: ImportStatus; UploadedAt: Date }>(`
+    SELECT ImportRunId, SourceSystem, FileName, Status, UploadedAt
+    FROM [import].ImportRun
+    WHERE ImportRunId IN (${placeholders.join(", ")})
+  `);
+  return result.recordset.map((r) => ({
+    importRunId: r.ImportRunId,
+    importCode: toImportCode(r.ImportRunId),
+    sourceSystem: r.SourceSystem,
+    fileName: r.FileName,
+    status: r.Status,
+    uploadedAt: r.UploadedAt.toISOString(),
+  }));
+}
+
 export async function setDataQualityIssueStatus(id: number, status: string): Promise<void> {
   const pool = await getPool();
   await pool.request().input("Id", sql.BigInt, id).input("Status", sql.VarChar(20), status).query(`

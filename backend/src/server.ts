@@ -6,6 +6,8 @@ import { closePool, getPool } from "./db/pool.js";
 import { getMigrationStatus } from "./db/migrate.js";
 import { logger } from "./logger/logger.js";
 import { startJobWorker } from "./modules/jobs/jobQueue.js";
+import { startHealthSnapshotSampler } from "./modules/health/healthSnapshotSampler.js";
+import { registerBackupJobHandler } from "./modules/backup/backup.jobHandler.js";
 
 async function bootstrapDatabaseDependentState(): Promise<void> {
   try {
@@ -46,11 +48,14 @@ async function main(): Promise<void> {
   });
 
   await bootstrapDatabaseDependentState();
+  registerBackupJobHandler();
   const jobWorker = startJobWorker();
+  const healthSampler = startHealthSnapshotSampler();
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, "Shutting down");
     jobWorker.stop();
+    healthSampler.stop();
     await new Promise<void>((resolve) => server.close(() => resolve()));
     await closePool();
     process.exit(0);

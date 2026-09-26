@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import type { ApiResponse, PaginatedResult } from "@mywfm/shared";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useFilters } from "@/lib/filters/FilterContext";
@@ -157,6 +158,7 @@ export default function ControlTowerPage() {
                       <th className="px-4 py-2 font-medium">Date</th>
                       <th className="px-4 py-2 font-medium">Value</th>
                       <th className="px-4 py-2 font-medium">Computed At</th>
+                      <th className="px-4 py-2 font-medium" />
                     </tr>
                   </thead>
                   <tbody>
@@ -168,6 +170,11 @@ export default function ControlTowerPage() {
                         <td className="px-4 py-2 text-ink">{row.businessDate}</td>
                         <td className="px-4 py-2 text-ink tabular-nums">{row.computedValue}</td>
                         <td className="px-4 py-2 text-ink-faint">{new Date(row.computedAt).toLocaleString()}</td>
+                        <td className="px-4 py-2">
+                          <Link href={`/data/data-lineage?id=${encodeURIComponent(row.calculationCode)}`} className="text-xs font-medium text-accent hover:underline">
+                            View lineage
+                          </Link>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

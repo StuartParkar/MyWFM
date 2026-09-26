@@ -151,7 +151,27 @@ Phase N" screen instead of a fake one
       inference). A new `master.EmployeeTransfer` log captures
       Department/Location/primary-Process changes, which `Employee`'s own
       current-value columns can't. See `documentation/attrition.md`.
-- [ ] **Phase 11 - Audit/lineage**: reprocessing, system health history, backup/restore automation.
+- [x] **Phase 11 - Audit/lineage**: Data Lineage (`/data/data-lineage`) is the
+      first screen to read back `formula.CalculationLedger.InputsSnapshot`
+      (written since Phase 7, never displayed until now), and Calls-derived
+      formulas now populate a real `SourceReference` from
+      `calls.QueueIntervalCall`/`AgentIntervalCall`'s own `ImportRunId`
+      (real since Phase 6, never threaded through) - every other formula
+      family honestly still has none to cite (they compute from live/manual
+      data, not an import). Reprocessing (`/data/reprocessing`) is an
+      authorized, reasoned, audited on-demand recalculation dispatching to
+      the same real service functions every screen already calls on read -
+      no new math, just a first-class, auditable request for one
+      (`system.ReprocessingRequest`). System Health (`/system/health`) gained
+      a real persisted History view (`system.HealthSnapshot`, sampled
+      periodically) on top of Phase 1's live-only snapshot. Backup/Restore
+      (`/system/backup-restore`) automates backup for real (the actual
+      `scripts/backup-mywfm.sh`, via the background job queue - safe because
+      a backup is purely additive) and guides restore without automating it
+      (the script itself targets a possibly brand-new machine, which a web
+      request handler cannot become). See
+      `documentation/lineage-and-reprocessing.md` and
+      `documentation/backup-restore.md`.
 - [ ] **Phase 12 - Hardening**: performance, security, tests, deployment package.
 
 ## Repository layout

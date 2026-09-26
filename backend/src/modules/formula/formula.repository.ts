@@ -55,6 +55,56 @@ function toCalculationCode(id: number): string {
   return `CALC-${String(id).padStart(8, "0")}`;
 }
 
+export interface CalculationLedgerDetail extends CalculationLedgerRow {
+  inputsSnapshot: unknown;
+}
+
+/**
+ * Single-row detail behind Data Lineage (build spec section 23) - unlike
+ * listCalculationHistory above (Custom Reports / Explain This Number), this
+ * is the first place InputsSnapshot is ever read back after being written by
+ * calculationLedger.ts's recordCalculation.
+ */
+export async function getCalculationById(calculationLedgerId: number): Promise<CalculationLedgerDetail | null> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("Id", sql.BigInt, calculationLedgerId)
+    .query<{
+      CalculationLedgerId: number;
+      FormulaCode: string;
+      FormulaVersion: number;
+      EntityType: string;
+      EntityId: string;
+      BusinessDate: string;
+      ComputedValue: number;
+      InputsSnapshot: string | null;
+      SourceReference: string | null;
+      ComputedAt: Date;
+    }>(`
+      SELECT CalculationLedgerId, FormulaCode, FormulaVersion, EntityType, EntityId,
+             CONVERT(VARCHAR(10), BusinessDate, 23) AS BusinessDate, ComputedValue, InputsSnapshot, SourceReference, ComputedAt
+      FROM [formula].CalculationLedger
+      WHERE CalculationLedgerId = @Id
+    `);
+  const r = result.recordset[0];
+  if (!r) return null;
+  return {
+    calculationLedgerId: r.CalculationLedgerId,
+    calculationCode: toCalculationCode(r.CalculationLedgerId),
+    formulaCode: r.FormulaCode,
+    formulaVersion: r.FormulaVersion,
+    formulaVersionLabel: `${r.FormulaCode}-V${r.FormulaVersion}`,
+    entityType: r.EntityType,
+    entityId: r.EntityId,
+    businessDate: r.BusinessDate,
+    computedValue: r.ComputedValue,
+    sourceReference: r.SourceReference,
+    computedAt: r.ComputedAt.toISOString(),
+    inputsSnapshot: r.InputsSnapshot ? JSON.parse(r.InputsSnapshot) : null,
+  };
+}
+
 export async function listCalculationHistory(params: {
   formulaCode?: string;
   entityType?: string;

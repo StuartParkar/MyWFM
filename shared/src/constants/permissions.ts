@@ -83,6 +83,14 @@ export const PERMISSION_CODES = [
   // HC, Joiners, Exits, Transfers and Attrition Rate are all derived on read from
   // master.Employee/EmployeeTransfer, nothing here is submitted or approved.
   "attrition.view",
+
+  // Phase 11 (audit/lineage, reprocessing, system health history, backup/restore automation).
+  // Data Lineage reuses formula.view (build spec section 23) - it's a deeper read of the same
+  // Calculation Ledger that endpoint already lists, not a new resource of its own.
+  "reprocessing.view",
+  "reprocessing.execute",
+  "backup.view",
+  "backup.execute",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];

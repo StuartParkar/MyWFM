@@ -1,17 +1,12 @@
 import { Router } from "express";
+import { z } from "zod";
 import type { ApiSuccess } from "@mywfm/shared";
-import { checkDbHealth, getPool } from "../../db/pool.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { requirePermission } from "../../middleware/rbac.js";
+import { getHealthReport } from "./health.service.js";
+import { listHealthSnapshots } from "./health.repository.js";
 
 export const healthRouter = Router();
-
-interface SystemHealthReport {
-  status: "UP" | "DEGRADED" | "DOWN";
-  uptimeSeconds: number;
-  database: Awaited<ReturnType<typeof checkDbHealth>>;
-  backgroundJobs: { queued: number; running: number; failedLast24h: number } | null;
-}
 
 /**
  * Unauthenticated liveness probe (container orchestration, load balancers).
@@ -23,32 +18,26 @@ healthRouter.get("/", (_req, res) => {
 });
 
 healthRouter.get("/detail", requireAuth, requirePermission("system.health.view"), async (_req, res) => {
-  const database = await checkDbHealth();
-  let backgroundJobs: SystemHealthReport["backgroundJobs"] = null;
-
-  if (database.status === "UP") {
-    const pool = await getPool();
-    const result = await pool.request().query<{ Status: string; Cnt: number }>(`
-      SELECT Status, COUNT(*) AS Cnt
-      FROM [system].BackgroundJob
-      WHERE Status IN ('QUEUED', 'RUNNING') OR (Status = 'FAILED' AND CompletedAt > DATEADD(HOUR, -24, SYSUTCDATETIME()))
-      GROUP BY Status
-    `);
-    const byStatus = Object.fromEntries(result.recordset.map((r) => [r.Status, r.Cnt]));
-    backgroundJobs = {
-      queued: byStatus.QUEUED ?? 0,
-      running: byStatus.RUNNING ?? 0,
-      failedLast24h: byStatus.FAILED ?? 0,
-    };
-  }
-
-  const report: SystemHealthReport = {
-    status: database.status === "UP" ? "UP" : "DEGRADED",
-    uptimeSeconds: Math.round(process.uptime()),
-    database,
-    backgroundJobs,
-  };
-
-  const body: ApiSuccess<SystemHealthReport> = { success: true, data: report };
+  const report = await getHealthReport();
+  const body: ApiSuccess<typeof report> = { success: true, data: report };
   res.status(200).json(body);
+});
+
+const historyQuerySchema = z.object({
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+});
+
+/**
+ * Phase 11: real persisted history (healthSnapshotSampler.ts) behind the same
+ * permission as the live snapshot above - defaults to the trailing 24 hours,
+ * since that's also the window the live snapshot's own "failed last 24h"
+ * figure already uses.
+ */
+healthRouter.get("/history", requireAuth, requirePermission("system.health.view"), async (req, res) => {
+  const input = historyQuerySchema.parse(req.query);
+  const to = input.to ?? new Date().toISOString();
+  const from = input.from ?? new Date(Date.parse(to) - 24 * 60 * 60 * 1000).toISOString();
+  const snapshots = await listHealthSnapshots(from, to);
+  res.json({ success: true, data: snapshots } satisfies ApiSuccess<typeof snapshots>);
 });

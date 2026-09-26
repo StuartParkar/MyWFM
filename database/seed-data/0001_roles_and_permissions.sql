@@ -34,9 +34,13 @@ USING (VALUES
     ('config.view',         'config', 'View Configuration Center settings.'),
     ('config.manage',       'config', 'Change Configuration Center settings (versioned).'),
     ('audit.view',          'audit',  'View the audit log.'),
-    ('system.health.view',  'system', 'View the System Health Monitor.'),
+    ('system.health.view',  'system', 'View the System Health Monitor (Phase 11: including its History view).'),
     ('job.view',            'system', 'View background job status.'),
     ('job.manage',          'system', 'Cancel/retry background jobs.'),
+    ('reprocessing.view',   'system', 'View reprocessing request history (Phase 11).'),
+    ('reprocessing.execute','system', 'Trigger an authorized, reasoned recalculation (Phase 11).'),
+    ('backup.view',         'system', 'View backup run history and the guided restore runbook (Phase 11).'),
+    ('backup.execute',      'system', 'Trigger a real backup run (Phase 11).'),
     ('masterdata.view',     'masterdata', 'View employees, organization, processes, shifts, queues and skills.'),
     ('masterdata.manage',   'masterdata', 'Create/edit master data records.'),
     ('import.view',         'import', 'View import runs and their status/counts.'),
@@ -95,7 +99,8 @@ USING (
             'forecast.view', 'controltower.view',
             'intraday.view', 'intraday.manage', 'intraday.approve', 'intraday.request',
             'workforce.planning.view', 'workforce.planning.manage', 'scenario.view', 'scenario.manage',
-            'attrition.view'
+            'attrition.view',
+            'reprocessing.view', 'reprocessing.execute', 'backup.view', 'backup.execute'
         )
     WHERE r.RoleCode = 'WFM'
 

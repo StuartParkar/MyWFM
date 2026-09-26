@@ -33,6 +33,32 @@ function serviceLevelThresholdSeconds(): number {
   return getConfigNumber("calls.service_level_threshold_seconds", 20);
 }
 
+/**
+ * Data Lineage's Source Reference (build spec section 23) for a Calls-derived
+ * ledger row: the real distinct ImportRunId(s) (calls.QueueIntervalCall/
+ * AgentIntervalCall.ImportRunId, populated since Phase 6) behind the bucket
+ * being recorded. NVARCHAR(100) is a tight budget once several import runs
+ * feed one bucket (a corrected re-import, a multi-day backfill), so this
+ * degrades gracefully to a truncated list + count rather than either
+ * silently dropping codes or overflowing the column.
+ */
+const SOURCE_REFERENCE_MAX_LENGTH = 100; // matches formula.CalculationLedger.SourceReference NVARCHAR(100)
+
+export function buildImportSourceReference(importRunIds: number[]): string | null {
+  const distinct = [...new Set(importRunIds)].sort((a, b) => a - b);
+  if (distinct.length === 0) return null;
+  const codes = distinct.map((id) => `IMPORT-${String(id).padStart(8, "0")}`);
+
+  let includedCount = codes.length;
+  let joined = codes.join(",");
+  while (joined.length > SOURCE_REFERENCE_MAX_LENGTH && includedCount > 1) {
+    includedCount--;
+    const omitted = codes.length - includedCount;
+    joined = `${codes.slice(0, includedCount).join(",")},+${omitted} more`;
+  }
+  return joined;
+}
+
 function summarize(raw: {
   offeredCalls: number;
   answeredCalls: number;
@@ -57,7 +83,14 @@ function summarize(raw: {
 
 /** Only the derived ratios get a ledger row, matching staffing.service.ts's precedent: the raw
  * counts they're computed from are recorded in inputsSnapshot, not as their own ledger rows. */
-async function recordMetricLedger(entityType: string, entityId: string, businessDate: string, summary: CallMetricsSummary, computedByUserId?: string): Promise<void> {
+async function recordMetricLedger(
+  entityType: string,
+  entityId: string,
+  businessDate: string,
+  summary: CallMetricsSummary,
+  sourceReference: string | null,
+  computedByUserId?: string,
+): Promise<void> {
   const inputsSnapshot = {
     offeredCalls: summary.offeredCalls,
     answeredCalls: summary.answeredCalls,
@@ -67,7 +100,7 @@ async function recordMetricLedger(entityType: string, entityId: string, business
   const record = (formulaCode: string, computedValue: number | null) => {
     if (computedValue === null) return;
     writes.push(
-      recordCalculation({ formulaCode, formulaVersion: 1, entityType, entityId, businessDate, computedValue, inputsSnapshot, computedByUserId: computedByUserId ?? null }),
+      recordCalculation({ formulaCode, formulaVersion: 1, entityType, entityId, businessDate, computedValue, inputsSnapshot, sourceReference, computedByUserId: computedByUserId ?? null }),
     );
   };
   record("ANSWER_RATE_PCT", summary.answerRatePct);
@@ -81,7 +114,9 @@ async function recordMetricLedger(entityType: string, entityId: string, business
 export async function listByQueue(params: { from: string; to: string; queueId?: number; computedByUserId?: string }): Promise<QueueCallMetrics[]> {
   const raw = await repo.listCallMetricsRaw({ ...params, serviceLevelThresholdSeconds: serviceLevelThresholdSeconds() });
   const rows = raw.map((r) => ({ businessDate: r.businessDate, queueId: r.queueId, queueName: r.queueName, ...summarize(r) }));
-  await Promise.all(rows.map((r) => recordMetricLedger("Queue", String(r.queueId), r.businessDate, r, params.computedByUserId)));
+  await Promise.all(
+    raw.map((r, i) => recordMetricLedger("Queue", String(r.queueId), r.businessDate, rows[i]!, buildImportSourceReference(r.importRunIds), params.computedByUserId)),
+  );
   return rows;
 }
 
@@ -109,6 +144,7 @@ export async function listByProcess(params: { from: string; to: string; processI
         abandonedCalls: r.abandonedCalls,
         answeredHandleSecondsSum: r.answeredHandleSecondsSum,
         answeredWithinThreshold: r.answeredWithinThreshold,
+        importRunIds: [...r.importRunIds],
       });
     } else {
       existing.offeredCalls += r.offeredCalls;
@@ -116,11 +152,13 @@ export async function listByProcess(params: { from: string; to: string; processI
       existing.abandonedCalls += r.abandonedCalls;
       existing.answeredHandleSecondsSum += r.answeredHandleSecondsSum;
       existing.answeredWithinThreshold += r.answeredWithinThreshold;
+      existing.importRunIds.push(...r.importRunIds);
     }
   }
-  const rows = [...grouped.values()]
-    .map((g) => ({ businessDate: g.businessDate, processId: g.processId, processName: g.processName, ...summarize(g) }))
-    .sort((a, b) => (a.businessDate < b.businessDate ? 1 : a.businessDate > b.businessDate ? -1 : 0));
-  await Promise.all(rows.map((r) => recordMetricLedger("Process", String(r.processId), r.businessDate, r, params.computedByUserId)));
+  const groupedRows = [...grouped.values()].sort((a, b) => (a.businessDate < b.businessDate ? 1 : a.businessDate > b.businessDate ? -1 : 0));
+  const rows = groupedRows.map((g) => ({ businessDate: g.businessDate, processId: g.processId, processName: g.processName, ...summarize(g) }));
+  await Promise.all(
+    groupedRows.map((g, i) => recordMetricLedger("Process", String(g.processId), g.businessDate, rows[i]!, buildImportSourceReference(g.importRunIds), params.computedByUserId)),
+  );
   return rows;
 }

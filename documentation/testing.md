@@ -31,6 +31,16 @@ npm test   # runs shared, then backend (vitest)
   following the same mock-the-repository-layer, exercise-the-real-service
   pattern - see each module's test file for exactly what it covers rather
   than this list restating every case; `npm test` runs all of them.
+- Phase 11: `reprocessingService.test.ts` (dispatch to the right real
+  calculation per `calculationType`, a failed underlying calculation
+  recorded as `status: FAILED` rather than thrown, `buildScope`'s
+  per-type field selection), `healthSnapshot.test.ts` (the real INSERT
+  behind System Health's History view, including the database-down case),
+  `callMetricsSourceReference.test.ts` (`buildImportSourceReference`'s
+  dedup/sort/graceful-truncation as a pure function) and
+  `calculationLineage.test.ts` (`parseImportRunIds` and
+  `getCalculationLineage`'s honestly-empty `sourceImportRuns` when a
+  formula wasn't computed from any import run).
 
 None of these need a real SQL Server - they mock the DB layer or test pure
 functions. There is no integration test against a live SQL Server yet,
@@ -42,6 +52,11 @@ against it is the actual end-to-end check for everything in `database/`.
 ## What's not covered yet (by design, not oversight)
 
 Performance tests (build spec section 70), and anything depending on
-Phase 11 (audit/lineage/reprocessing/system health history) or Phase 12
-(hardening) modules that don't exist yet. Adding tests for them now would
-mean testing placeholder behavior instead of real behavior.
+Phase 12 (hardening) modules that don't exist yet. Adding tests for them now
+would mean testing placeholder behavior instead of real behavior.
+
+The `backup.jobHandler.ts`'s actual `execFile` call (running the real
+`scripts/backup-mywfm.sh`) is not unit tested, the same precedent as the
+org-hierarchy importer's own raw-SQL orchestration: it is a thin shell-out
+to an already-tested, already-documented script (`documentation/backup-restore.md`),
+not business logic with a decision to verify.

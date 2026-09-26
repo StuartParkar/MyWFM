@@ -6,13 +6,24 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { ErrorState, LoadingState } from "@/components/ui/States";
+import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface SystemHealthReport {
   status: "UP" | "DEGRADED" | "DOWN";
   uptimeSeconds: number;
   database: { status: "UP" | "DOWN"; latencyMs?: number; error?: string };
   backgroundJobs: { queued: number; running: number; failedLast24h: number } | null;
+}
+
+interface HealthSnapshot {
+  snapshotId: number;
+  capturedAt: string;
+  status: "UP" | "DEGRADED" | "DOWN";
+  databaseStatus: "UP" | "DOWN";
+  databaseLatencyMs: number | null;
+  jobsQueued: number;
+  jobsRunning: number;
+  jobsFailedLast24h: number;
 }
 
 export default function SystemHealthPage() {
@@ -32,6 +43,18 @@ export default function SystemHealthPage() {
   }, [authFetch]);
 
   const { data: report, error, loading, reload } = useAsyncResource(fetcher);
+
+  const historyFetcher = useCallback(async (): Promise<AsyncResult<HealthSnapshot[]>> => {
+    try {
+      const res = await authFetch("/api/system-health/history");
+      const body = (await res.json()) as ApiResponse<HealthSnapshot[]>;
+      if (!res.ok || !body.success) return { ok: false, message: !body.success ? body.error.message : `Request failed (${res.status})` };
+      return { ok: true, data: body.data };
+    } catch {
+      return { ok: false, message: "Could not reach the backend." };
+    }
+  }, [authFetch]);
+  const { data: history, error: historyError, loading: historyLoading } = useAsyncResource(historyFetcher);
 
   return (
     <div className="flex flex-col gap-6">
@@ -88,6 +111,43 @@ export default function SystemHealthPage() {
           </Card>
         </div>
       )}
+
+      <Card>
+        <CardHeader title="History" subtitle="Sampled periodically in the background (system.health_snapshot_interval_minutes) - not another live check." />
+        {historyLoading && <LoadingState label="Loading history" />}
+        {!historyLoading && historyError && <ErrorState message={historyError} />}
+        {!historyLoading && !historyError && history?.length === 0 && (
+          <EmptyState title="No history yet" description="The first sample is captured shortly after the backend starts - check back in a few minutes." />
+        )}
+        {!historyLoading && !historyError && history && history.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-faint">
+                  <th className="px-4 py-3 font-medium">Captured At</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">DB Latency</th>
+                  <th className="px-4 py-3 font-medium">Queued</th>
+                  <th className="px-4 py-3 font-medium">Running</th>
+                  <th className="px-4 py-3 font-medium">Failed (24h)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((s) => (
+                  <tr key={s.snapshotId} className="border-b border-line last:border-0">
+                    <td className="px-4 py-3 text-ink-muted">{new Date(s.capturedAt).toLocaleString()}</td>
+                    <td className="px-4 py-3"><Badge tone={s.status === "UP" ? "success" : s.status === "DEGRADED" ? "warning" : "critical"}>{s.status}</Badge></td>
+                    <td className="px-4 py-3 text-ink tabular-nums">{s.databaseLatencyMs != null ? `${s.databaseLatencyMs} ms` : "—"}</td>
+                    <td className="px-4 py-3 text-ink tabular-nums">{s.jobsQueued}</td>
+                    <td className="px-4 py-3 text-ink tabular-nums">{s.jobsRunning}</td>
+                    <td className="px-4 py-3 tabular-nums text-critical">{s.jobsFailedLast24h}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
