@@ -16,6 +16,8 @@ import { masterDataRouter } from "./modules/masterdata/masterdata.routes.js";
 import { usersRouter } from "./modules/users/users.routes.js";
 import { importsRouter } from "./modules/imports/import.routes.js";
 import { rosterRouter } from "./modules/roster/roster.routes.js";
+import { attendanceRouter } from "./modules/attendance/attendance.routes.js";
+import { businessDayRouter } from "./modules/businessday/businessday.routes.js";
 
 export function createApp() {
   const app = express();
@@ -44,6 +46,8 @@ export function createApp() {
   app.use("/api/users", usersRouter);
   app.use("/api/imports", importsRouter);
   app.use("/api/roster", rosterRouter);
+  app.use("/api/attendance", attendanceRouter);
+  app.use("/api/business-day", businessDayRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

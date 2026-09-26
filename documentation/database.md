@@ -27,6 +27,7 @@ operate the migration runner.
 | `roster` | `RosterRequirement`, `RosterRequirementAction`, `RosterRequirementAssignment` | The requirement + its full approval audit trail + proposed assignments - see `documentation/roster.md` |
 | `roster` | `PublishedRoster` | The official roster, versioned - one active row per employee/date (`UX_PublishedRoster_ActiveSlot` filtered unique index), same never-overwrite discipline as `config.ConfigurationSetting` |
 | `roster` | `RosterChange` | Confirmed shift/weekly-off changes outside the requirement workflow, with before/after `PublishedRoster` links |
+| `attendance` | `AttendanceSession` | Login/logout sessions (multiple per employee/business date - see `documentation/attendance.md`); First Login/Last Logout/Net Working Hours are derived on read, never stored |
 
 `master.Employee` is loaded from the real org hierarchy sample via
 `npm run import:org-hierarchy --workspace=backend`

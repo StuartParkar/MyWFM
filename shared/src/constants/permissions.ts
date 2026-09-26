@@ -45,6 +45,10 @@ export const PERMISSION_CODES = [
   "roster.review.hod",
   "roster.review.wfm",
   "roster.change",
+
+  // Attendance & Business Day Engine (Phase 5)
+  "attendance.view",
+  "attendance.manage",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];

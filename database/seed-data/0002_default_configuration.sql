@@ -10,7 +10,10 @@
 MERGE config.ConfigurationSetting AS target
 USING (VALUES
     ('business_day.timezone',            '"Asia/Kolkata"', 'STRING',  'BUSINESS_DAY', 'IANA timezone the Business Day Engine resolves business dates in. Locations observed so far (DEL, CHD) are both India.'),
-    ('business_day.start_time',          '"00:00"',        'STRING',  'BUSINESS_DAY', 'Calendar-day start placeholder used until the Phase 5 shift-aware Business Day Engine replaces it.'),
+    ('business_day.start_time',          '"00:00"',        'STRING',  'BUSINESS_DAY', 'Company-wide business-day start cutoff (resolveGlobalBusinessDate) - the default "00:00" makes the global business date identical to the plain calendar date.'),
+    ('attendance.late_grace_minutes',       '5',            'NUMBER',  'ATTENDANCE',   'Minutes after Scheduled Start before a late first login counts as LATE_EXCEPTION.'),
+    ('attendance.early_logout_grace_minutes','5',           'NUMBER',  'ATTENDANCE',   'Minutes before Scheduled End an early last logout is still tolerated before counting as EARLY_LOGOUT_EXCEPTION.'),
+    ('attendance.double_shift_min_gap_hours','5',           'NUMBER',  'ATTENDANCE',   'Minimum hours required between one session''s end and the next session''s start on the same business date before DOUBLE_SHIFT_EXCEPTION is raised (build spec section 15).'),
     ('security.access_token_ttl_minutes','15',              'NUMBER',  'SECURITY',     'Access (JWT) token lifetime in minutes.'),
     ('security.refresh_token_ttl_days',  '7',               'NUMBER',  'SECURITY',     'Refresh token lifetime in days.'),
     ('security.password_min_length',     '10',              'NUMBER',  'SECURITY',     'Minimum password length enforced at registration/reset.'),

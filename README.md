@@ -57,7 +57,14 @@ Phase N" screen instead of a fake one
       for shift changes. Admin/Requirements/Review/Approvals/Published
       Roster/Roster Changes screens are wired to real data - see
       `documentation/roster.md`.
-- [ ] **Phase 5 - Attendance & Business Day Engine**.
+- [x] **Phase 5 - Attendance & Business Day Engine**: the real overnight-shift-aware,
+      timezone-aware `resolveBusinessDate`/`resolveGlobalBusinessDate`/`combineLocalDateTime`
+      (superseding Phase 1's calendar-date placeholder - the Global Filter Bar now calls
+      `GET /api/business-day/today`), attendance sessions (manual entry / authorized
+      adjustment - no import source exists yet, nothing invented), and the derived
+      formulas (Net Working Hours, Variance, Late/Early Minutes with configurable grace
+      periods, Double Shift Exception). Operations > Attendance is wired to real data -
+      see `documentation/attendance.md`.
 - [ ] **Phase 6 - Calls**: universal call model, per-phone-system mapping, aggregation.
 - [ ] **Phase 7 - Formula engine**: calculation ledger, staffing, shrinkage,
       AHT, occupancy, service level, forecast, attrition.

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ApiResponse } from "@mywfm/shared";
 import {
   createDefaultFilterState,
@@ -70,6 +70,12 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
   const { authFetch } = useAuth();
   const [filters, setFilters] = useState<GlobalFilterState>(loadInitialState);
 
+  // Starts as the placeholder, replaced once the real (config-driven, Business Day Engine)
+  // answer loads below. A ref rather than state: setDateRangePreset/reset read the *current*
+  // value at call time without needing to be recreated (and re-run their own effects) every
+  // time it updates.
+  const businessTodayRef = useRef<string>(getPlaceholderBusinessToday());
+
   const [hodOptions, setHodOptions] = useState<LookupOption[]>([]);
   const [tlOptions, setTlOptions] = useState<LookupOption[]>([]);
   const [agentSeniorOptions, setAgentSeniorOptions] = useState<LookupOption[]>([]);
@@ -83,6 +89,25 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
       // Per-viewer convenience only - a storage failure (private browsing, quota) is not fatal.
     }
   }, [filters]);
+
+  // Load once: the real, config-driven business date (build spec section 9), replacing the
+  // placeholder businessTodayRef started with. A fetch failure here just leaves the
+  // placeholder in place rather than breaking filtering.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await authFetch("/api/business-day/today");
+        const body = (await res.json()) as ApiResponse<{ businessDate: string }>;
+        if (!cancelled && res.ok && body.success) businessTodayRef.current = body.data.businessDate;
+      } catch {
+        // Keep the placeholder.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch]);
 
   // Load once: the top-level lookups that don't depend on any selection.
   useEffect(() => {
@@ -148,7 +173,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
   }, [filters.tl]);
 
   const setDateRangePreset = useCallback((preset: DateRangePreset, custom?: CustomRange) => {
-    setFilters((f) => ({ ...f, dateRange: resolveDateRangePreset(preset, getPlaceholderBusinessToday(), custom) }));
+    setFilters((f) => ({ ...f, dateRange: resolveDateRangePreset(preset, businessTodayRef.current, custom) }));
   }, []);
 
   // Cascade: HOD -> TL -> Agent/Senior -> Individual Agent (build spec section 8).
@@ -180,7 +205,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const reset = useCallback(() => {
-    setFilters(createDefaultFilterState(getPlaceholderBusinessToday()));
+    setFilters(createDefaultFilterState(businessTodayRef.current));
   }, []);
 
   const value = useMemo<FilterContextValue>(

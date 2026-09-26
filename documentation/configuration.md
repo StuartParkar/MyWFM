@@ -25,8 +25,11 @@ unreachable or the key is missing).
 
 | Key | Category | Default | Meaning |
 |---|---|---|---|
-| `business_day.timezone` | BUSINESS_DAY | `Asia/Kolkata` | IANA timezone for business-date math (placeholder until Phase 5's shift-aware engine) |
-| `business_day.start_time` | BUSINESS_DAY | `00:00` | Calendar-day start placeholder |
+| `business_day.timezone` | BUSINESS_DAY | `Asia/Kolkata` | IANA timezone the Business Day Engine resolves business dates in (`documentation/attendance.md`) |
+| `business_day.start_time` | BUSINESS_DAY | `00:00` | Company-wide business-day start cutoff (`resolveGlobalBusinessDate`) - the default makes the global business date identical to the plain calendar date |
+| `attendance.late_grace_minutes` | ATTENDANCE | `5` | Minutes after Scheduled Start before a late first login counts as late |
+| `attendance.early_logout_grace_minutes` | ATTENDANCE | `5` | Minutes before Scheduled End an early last logout is still tolerated |
+| `attendance.double_shift_min_gap_hours` | ATTENDANCE | `5` | Minimum gap between two sessions the same day before DOUBLE_SHIFT_EXCEPTION is raised |
 | `security.access_token_ttl_minutes` | SECURITY | `15` | JWT lifetime |
 | `security.refresh_token_ttl_days` | SECURITY | `7` | Refresh token lifetime |
 | `security.password_min_length` | SECURITY | `10` | Enforced by `validatePasswordPolicy` |

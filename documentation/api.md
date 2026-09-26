@@ -11,7 +11,7 @@ Base path: `/api`. Every response is one of the two shapes in
 `errorId` correlates to a server-side log line with full technical detail -
 never expect (or parse) more detail from the response body itself.
 
-## Endpoints (Phases 1-4)
+## Endpoints (Phases 1-5)
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
@@ -50,6 +50,12 @@ never expect (or parse) more detail from the response body itself.
 | GET | `/api/roster/change-impact` | bearer + `roster.change` | `?employeeId=&businessDate=&newShiftId=` - read-only Change Impact Simulator, writes nothing |
 | POST | `/api/roster/changes` | bearer + `roster.change` | Body `{ employeeId, businessDate, newShiftId, reason }` - confirms a shift change |
 | GET | `/api/roster/changes` | bearer + `roster.view` | Paginated history of confirmed roster changes |
+| GET | `/api/attendance` | bearer + `attendance.view` | Paginated daily attendance summaries, `?from=&to=&employeeId=` (`from`/`to` required) |
+| GET | `/api/attendance/sessions` | bearer + `attendance.view` | `?employeeId=&businessDate=` (both required) - raw sessions for one employee/day |
+| POST | `/api/attendance/sessions` | bearer + `attendance.manage` | Manual entry: `{ employeeId, businessDate, sessionStart, sessionEnd?, breakMinutes?, reason? }` |
+| PATCH | `/api/attendance/sessions/:id` | bearer + `attendance.manage` | Adjustment: `{ sessionStart?, sessionEnd?, breakMinutes?, reason }` - `reason` is mandatory |
+| DELETE | `/api/attendance/sessions/:id` | bearer + `attendance.manage` | Body `{ reason }` - `reason` is mandatory |
+| GET | `/api/business-day/today` | bearer | `{ businessDate, timezone }` - the company-wide business date right now (`resolveGlobalBusinessDate`) |
 
 Every future module's endpoints (`/api/calls`, ...) follow the
 same envelope, auth (`requireAuth`), authorization
