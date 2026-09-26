@@ -1,0 +1,49 @@
+{
+  "name": "@mywfm/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/server.ts",
+    "build": "tsc -b",
+    "start": "node --env-file=.env dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate": "tsx --env-file=.env src/db/migrateCli.ts up",
+    "db:migrate:status": "tsx --env-file=.env src/db/migrateCli.ts status",
+    "db:seed": "tsx --env-file=.env src/db/seed.ts",
+    "db:seed:dev": "tsx --env-file=.env src/scripts/seedDev.ts",
+    "create-admin": "tsx --env-file=.env src/scripts/createAdmin.ts",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@mywfm/shared": "*",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mssql": "^11.0.1",
+    "pino": "^9.5.0",
+    "pino-http": "^10.4.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/mssql": "^12.0.0",
+    "@types/node": "^22.10.5",
+    "eslint": "^9.18.0",
+    "pino-pretty": "^13.0.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.19.1",
+    "tsx": "^4.19.2",
+    "vitest": "^2.1.8"
+  }
+}

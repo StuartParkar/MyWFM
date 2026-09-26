@@ -1,0 +1,65 @@
+name: universal-mywfm
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SQL_SERVER_PASSWORD:?set SQL_SERVER_PASSWORD in .env}
+      MSSQL_PID: Developer
+    ports:
+      - "${SQL_SERVER_PORT:-1433}:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      # mssql-tools path differs across image tags (mssql-tools vs mssql-tools18);
+      # try both rather than pinning one. See documentation/deployment.md.
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      SQL_SERVER_HOST: db
+      SQL_SERVER_PORT: 1433
+      SQL_SERVER_DATABASE: ${SQL_SERVER_DATABASE:-UniversalMyWFM}
+      SQL_SERVER_USER: sa
+      SQL_SERVER_PASSWORD: ${SQL_SERVER_PASSWORD:?set SQL_SERVER_PASSWORD in .env}
+      SQL_SERVER_ENCRYPT: "true"
+      SQL_SERVER_TRUST_SERVER_CERTIFICATE: "true"
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET in .env}
+      JWT_REFRESH_PEPPER: ${JWT_REFRESH_PEPPER:?set JWT_REFRESH_PEPPER in .env}
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        BACKEND_API_URL: http://backend:4000
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      BACKEND_API_URL: http://backend:4000
+    ports:
+      - "3000:3000"
+
+volumes:
+  mssql-data:

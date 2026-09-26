@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Database
+database/backup/*.bak
+*.bacpac
+
+# Import Center runtime uploads land here once Phase 3 builds it (not yet) -
+# imports/samples/master-data/ holds real, committed reference data (see its
+# own README) and must stay tracked, so this only ignores future upload dirs.
+imports/rejected/uploads/
+imports/samples/uploads/
+
+# Backup archives produced by scripts
+backups/
+*.zip

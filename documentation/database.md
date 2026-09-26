@@ -1,0 +1,61 @@
+# Database
+
+See `database/schema/README.md` for the conventions (schemas per domain, key
+strategy, migrations-vs-programmability-objects split, idempotency, the `GO`
+batch-splitting problem). This document is the current inventory and how to
+operate the migration runner.
+
+## Current schema (Phase 1)
+
+| Schema | Table | Purpose |
+|---|---|---|
+| `security` | `Role`, `Permission`, `RolePermission` | RBAC definitions |
+| `security` | `User`, `UserRole` | Login accounts and their role grants |
+| `security` | `RefreshToken` | Hashed, rotated refresh tokens |
+| `audit` | `AuditLog` | Who/what/when/where/before/after/reason/reference (section 44) |
+| `config` | `ConfigurationSetting` | Versioned business-rule configuration (section 54) |
+| `system` | `BackgroundJob` | Durable job queue (section 67) |
+| `system` | `SchemaMigration` | Applied-migration tracking (created by the runner itself) |
+
+No `master.*` (employees/departments/processes) schema exists yet - that's
+Phase 2, informed by the real org hierarchy sample in
+`imports/samples/master-data/`.
+
+## Running migrations
+
+```bash
+npm run db:migrate --workspace=backend         # apply pending migrations + programmability objects
+npm run db:migrate:status --workspace=backend  # report applied/pending/checksum-mismatch, no changes made
+npm run db:seed --workspace=backend            # real reference data (roles, permissions, default config)
+npm run db:seed:dev --workspace=backend        # DEMO DATA admin login - local dev only, refuses NODE_ENV=production
+npm run create-admin --workspace=backend       # production bootstrap: creates one real ADMIN account
+```
+
+The runner (`backend/src/db/migrate.ts`) is intentionally simple:
+
+1. Ensures `system.SchemaMigration` exists.
+2. Applies every `database/migrations/*.sql` file not yet recorded there, in
+   filename order, each inside one transaction. If a filename IS already
+   recorded but its checksum has changed, it throws rather than silently
+   re-running or ignoring the edit - migrations are append-only.
+3. Re-applies every `.sql` file under `stored-procedures/`, `views/`,
+   `functions/`, `triggers/` (all written as `CREATE OR ALTER`, so this is
+   always safe and nothing is tracked for them).
+
+## Why a stored procedure for login
+
+`security.usp_GetUserAuthProfile` fetches the user row, their roles, and the
+flattened permission set granted by those roles in one round trip, because
+it runs on every login and every access-token refresh. This is the only
+stored procedure Phase 1 needed; see `database/stored-procedures/README`-style
+reasoning in `database/schema/README.md` for when a query becomes "stored
+procedure-worthy" versus staying as parameterized SQL in a repository file.
+
+## Historical immutability
+
+`config.ConfigurationSetting` enforces "exactly one active version per key" at
+the database level (a filtered unique index), not just in application code -
+changing a setting always inserts a new `Version` row rather than overwriting
+one in place. The same discipline (never overwrite, always version) will
+apply to `CALC-*` formula versions and roster versions once Phases 4 and 7
+build them.
