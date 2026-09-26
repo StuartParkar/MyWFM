@@ -28,6 +28,10 @@ export const PERMISSION_CODES = [
   "system.health.view",
   "job.view",
   "job.manage",
+
+  // Master data (Phase 2)
+  "masterdata.view",
+  "masterdata.manage",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];

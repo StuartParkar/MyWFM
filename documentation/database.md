@@ -17,9 +17,21 @@ operate the migration runner.
 | `system` | `BackgroundJob` | Durable job queue (section 67) |
 | `system` | `SchemaMigration` | Applied-migration tracking (created by the runner itself) |
 
-No `master.*` (employees/departments/processes) schema exists yet - that's
-Phase 2, informed by the real org hierarchy sample in
-`imports/samples/master-data/`.
+| `master` | `Location`, `Process`, `Department`, `Designation` | Reference lookups |
+| `master` | `Employee` | Self-referencing hierarchy (Sme/TeamLeader/Am/Manager/SrManager/UnitHod EmployeeId columns), `VacantTeamLeaderLabel` for "TBA-*" placeholders |
+| `master` | `EmployeeProcess` | Many-to-many - a combined source value like "ABS/LBF" becomes two rows, not one literal Process |
+| `master` | `Shift`, `Queue`, `Skill`, `EmployeeSkill`, `QueueSkillRequirement` | Master data with no real rows yet (nothing to seed without inventing it - see each Admin screen's empty state) |
+
+`master.Employee` is loaded from the real org hierarchy sample via
+`npm run import:org-hierarchy --workspace=backend`
+(`backend/src/scripts/importOrgHierarchy.ts`) - a two-pass loader (insert
+employees, then resolve alias-based leader references now that every
+employee exists) plus a derived-designation pass (an employee's own
+DesignationId is the highest hierarchy level at which their EmployeeId is
+referenced as someone *else's* leader; no such column exists in the source).
+See `imports/samples/master-data/README.md` for the specific data-quality
+anomalies it handles (alias trimming, `TBA-*` vacancies, a rare multi-name
+cell, blank-vs-dash nulls).
 
 ## Running migrations
 

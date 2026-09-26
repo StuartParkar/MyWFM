@@ -36,9 +36,12 @@ Phase N" screen instead of a fake one
       packages, SQL Server connection + migration runner, authentication +
       RBAC + audit foundation, versioned configuration, background job queue,
       Docker, backup/restore scripts, this documentation set.
-- [ ] **Phase 2 - Master data**: employees, departments, processes, HOD/TL,
-      designations, shifts, queues, skills - schema designed from the real
-      org hierarchy in `imports/samples/master-data/`.
+- [x] **Phase 2 - Master data**: employees, departments, processes, HOD/TL
+      hierarchy (self-referencing, alias-resolved), designations (derived
+      from hierarchy references), shifts, queues, skills. Real org hierarchy
+      loaded via `npm run import:org-hierarchy --workspace=backend`. Global
+      Filter Bar's HOD->TL->Agent/Senior cascade and Admin > Employees/
+      Organization/Queues/Skills/Shifts screens are wired to real data.
 - [ ] **Phase 3 - Import framework**: staging, normalization, data quality, import logs.
 - [ ] **Phase 4 - Roster**: requirement, approval workflow, versioning, publication.
 - [ ] **Phase 5 - Attendance & Business Day Engine**.

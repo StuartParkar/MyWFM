@@ -19,7 +19,13 @@ interface AsyncResourceState<T> {
  * react-hooks/set-state-in-effect because the linter can't see that the
  * setState calls only happen after the awaited fetch resolves.
  */
-export function useAsyncResource<T>(fetcher: () => Promise<AsyncResult<T>>): AsyncResourceState<T> {
+/**
+ * `deps` lets callers whose fetcher depends on changing params (page, search,
+ * a filter) retrigger the fetch on those specific values, without making
+ * `fetcher` itself a dependency - callers otherwise pass a fresh closure every
+ * render, which would refetch on every render.
+ */
+export function useAsyncResource<T>(fetcher: () => Promise<AsyncResult<T>>, deps: unknown[] = []): AsyncResourceState<T> {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,9 +49,9 @@ export function useAsyncResource<T>(fetcher: () => Promise<AsyncResult<T>>): Asy
     };
     // fetcher is intentionally excluded: callers pass a fresh closure on every
     // render, and depending on it would refetch on every render. reloadToken
-    // is the only thing meant to re-trigger this effect after mount.
+    // and the caller-supplied deps are what's meant to re-trigger this effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reloadToken]);
+  }, [reloadToken, ...deps]);
 
   const reload = useCallback(() => setReloadToken((t) => t + 1), []);
 

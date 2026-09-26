@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { ApiResponse } from "@mywfm/shared";
 import {
   createDefaultFilterState,
   resolveDateRangePreset,
@@ -8,12 +9,23 @@ import {
   type DateRangePreset,
   type GlobalFilterState,
 } from "@mywfm/shared";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { getPlaceholderBusinessToday } from "./businessToday";
 
 const STORAGE_KEY = "mywfm.filters.v1";
 
+export interface LookupOption {
+  id: string;
+  label: string;
+}
+
 interface FilterContextValue {
   filters: GlobalFilterState;
+  hodOptions: LookupOption[];
+  tlOptions: LookupOption[];
+  agentSeniorOptions: LookupOption[];
+  processOptions: LookupOption[];
+  designationOptions: LookupOption[];
   setDateRangePreset(preset: DateRangePreset, custom?: CustomRange): void;
   setProcess(value: string): void;
   setHod(value: string): void;
@@ -44,8 +56,25 @@ function loadInitialState(): GlobalFilterState {
   }
 }
 
+interface OrgLookupRow {
+  employeeId: string;
+  fullName: string;
+  aliasName: string | null;
+}
+
+function toOption(row: OrgLookupRow): LookupOption {
+  return { id: row.employeeId, label: row.aliasName ? `${row.fullName} (${row.aliasName})` : row.fullName };
+}
+
 export function FilterProvider({ children }: { children: React.ReactNode }) {
+  const { authFetch } = useAuth();
   const [filters, setFilters] = useState<GlobalFilterState>(loadInitialState);
+
+  const [hodOptions, setHodOptions] = useState<LookupOption[]>([]);
+  const [tlOptions, setTlOptions] = useState<LookupOption[]>([]);
+  const [agentSeniorOptions, setAgentSeniorOptions] = useState<LookupOption[]>([]);
+  const [processOptions, setProcessOptions] = useState<LookupOption[]>([]);
+  const [designationOptions, setDesignationOptions] = useState<LookupOption[]>([]);
 
   useEffect(() => {
     try {
@@ -54,6 +83,69 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
       // Per-viewer convenience only - a storage failure (private browsing, quota) is not fatal.
     }
   }, [filters]);
+
+  // Load once: the top-level lookups that don't depend on any selection.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [hodsRes, processesRes, designationsRes] = await Promise.all([
+        authFetch("/api/master-data/lookups/hods"),
+        authFetch("/api/master-data/processes"),
+        authFetch("/api/master-data/designations"),
+      ]);
+      if (cancelled) return;
+      const hodsBody = (await hodsRes.json()) as ApiResponse<OrgLookupRow[]>;
+      if (hodsBody.success) setHodOptions(hodsBody.data.map(toOption));
+
+      const processesBody = (await processesRes.json()) as ApiResponse<{ id: number; code: string; name: string }[]>;
+      if (processesBody.success) setProcessOptions(processesBody.data.map((p) => ({ id: String(p.id), label: p.name })));
+
+      const designationsBody = (await designationsRes.json()) as ApiResponse<{ code: string; name: string }[]>;
+      if (designationsBody.success) setDesignationOptions(designationsBody.data.map((d) => ({ id: d.code, label: d.name })));
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // TLs depend on the selected HOD.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (filters.hod === "ALL") {
+        setTlOptions([]);
+        return;
+      }
+      const res = await authFetch(`/api/master-data/lookups/tls?hodId=${encodeURIComponent(filters.hod)}`);
+      if (cancelled) return;
+      const body = (await res.json()) as ApiResponse<OrgLookupRow[]>;
+      if (body.success) setTlOptions(body.data.map(toOption));
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.hod]);
+
+  // Agent/Senior depends on the selected TL.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (filters.tl === "ALL") {
+        setAgentSeniorOptions([]);
+        return;
+      }
+      const res = await authFetch(`/api/master-data/lookups/agents?tlId=${encodeURIComponent(filters.tl)}`);
+      if (cancelled) return;
+      const body = (await res.json()) as ApiResponse<OrgLookupRow[]>;
+      if (body.success) setAgentSeniorOptions(body.data.map(toOption));
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.tl]);
 
   const setDateRangePreset = useCallback((preset: DateRangePreset, custom?: CustomRange) => {
     setFilters((f) => ({ ...f, dateRange: resolveDateRangePreset(preset, getPlaceholderBusinessToday(), custom) }));
@@ -92,8 +184,38 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<FilterContextValue>(
-    () => ({ filters, setDateRangePreset, setProcess, setHod, setTl, setAgentSenior, setAgentId, setDesignation, reset }),
-    [filters, setDateRangePreset, setProcess, setHod, setTl, setAgentSenior, setAgentId, setDesignation, reset],
+    () => ({
+      filters,
+      hodOptions,
+      tlOptions,
+      agentSeniorOptions,
+      processOptions,
+      designationOptions,
+      setDateRangePreset,
+      setProcess,
+      setHod,
+      setTl,
+      setAgentSenior,
+      setAgentId,
+      setDesignation,
+      reset,
+    }),
+    [
+      filters,
+      hodOptions,
+      tlOptions,
+      agentSeniorOptions,
+      processOptions,
+      designationOptions,
+      setDateRangePreset,
+      setProcess,
+      setHod,
+      setTl,
+      setAgentSenior,
+      setAgentId,
+      setDesignation,
+      reset,
+    ],
   );
 
   return <FilterContext.Provider value={value}>{children}</FilterContext.Provider>;

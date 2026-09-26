@@ -36,7 +36,9 @@ USING (VALUES
     ('audit.view',          'audit',  'View the audit log.'),
     ('system.health.view',  'system', 'View the System Health Monitor.'),
     ('job.view',            'system', 'View background job status.'),
-    ('job.manage',          'system', 'Cancel/retry background jobs.')
+    ('job.manage',          'system', 'Cancel/retry background jobs.'),
+    ('masterdata.view',     'masterdata', 'View employees, organization, processes, shifts, queues and skills.'),
+    ('masterdata.manage',   'masterdata', 'Create/edit master data records.')
 ) AS source (PermissionCode, ModuleName, Description)
 ON target.PermissionCode = source.PermissionCode
 WHEN MATCHED THEN
@@ -45,10 +47,10 @@ WHEN NOT MATCHED THEN
     INSERT (PermissionCode, ModuleName, Description) VALUES (source.PermissionCode, source.ModuleName, source.Description);
 GO
 
--- Default role -> permission matrix. HOD/LEADER/REQUESTOR intentionally get no
--- grants yet: every Phase-1 permission is admin/WFM-operational in nature.
--- Their real permissions arrive with the modules that need them (roster
--- approval, intraday actions, ...) in later phases.
+-- Default role -> permission matrix. REQUESTOR intentionally gets no grants
+-- yet: every permission defined so far is admin/WFM/leadership-operational in
+-- nature. Real REQUESTOR permissions arrive with the modules that need them
+-- (roster submission, ...) in later phases.
 MERGE security.RolePermission AS target
 USING (
     SELECT r.RoleId, p.PermissionId
@@ -61,8 +63,16 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('user.view', 'config.view', 'audit.view', 'system.health.view', 'job.view', 'job.manage')
+        ON p.PermissionCode IN ('user.view', 'config.view', 'audit.view', 'system.health.view', 'job.view', 'job.manage', 'masterdata.view')
     WHERE r.RoleCode = 'WFM'
+
+    UNION ALL
+
+    SELECT r.RoleId, p.PermissionId
+    FROM security.Role r
+    JOIN security.Permission p
+        ON p.PermissionCode IN ('masterdata.view')
+    WHERE r.RoleCode IN ('HOD', 'LEADER')
 ) AS source (RoleId, PermissionId)
 ON target.RoleId = source.RoleId AND target.PermissionId = source.PermissionId
 WHEN NOT MATCHED THEN

@@ -12,6 +12,8 @@ import { authRouter } from "./modules/auth/auth.routes.js";
 import { auditRouter } from "./modules/audit/audit.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 import { jobsRouter } from "./modules/jobs/jobs.routes.js";
+import { masterDataRouter } from "./modules/masterdata/masterdata.routes.js";
+import { usersRouter } from "./modules/users/users.routes.js";
 
 export function createApp() {
   const app = express();
@@ -36,6 +38,8 @@ export function createApp() {
   app.use("/api/audit", auditRouter);
   app.use("/api/jobs", jobsRouter);
   app.use("/api/system-health", healthRouter);
+  app.use("/api/master-data", masterDataRouter);
+  app.use("/api/users", usersRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

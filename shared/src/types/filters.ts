@@ -42,7 +42,13 @@ export interface GlobalFilterState {
   designation: string;
 }
 
-export const DEFAULT_DESIGNATION = "Agent";
+/**
+ * The DesignationCode (master.Designation, seeded by
+ * database/seed-data/0003_designations.sql), not a display label - the
+ * Global Filter Bar's Designation dropdown matches on this value against
+ * master-data lookup options, and shows "Agent" as the option's label.
+ */
+export const DEFAULT_DESIGNATION = "AGENT";
 
 export function createDefaultFilterState(todayBusinessDate: string): GlobalFilterState {
   return {

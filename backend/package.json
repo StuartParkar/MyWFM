@@ -16,6 +16,7 @@
     "db:seed": "tsx --env-file=.env src/db/seed.ts",
     "db:seed:dev": "tsx --env-file=.env src/scripts/seedDev.ts",
     "create-admin": "tsx --env-file=.env src/scripts/createAdmin.ts",
+    "import:org-hierarchy": "tsx --env-file=.env src/scripts/importOrgHierarchy.ts",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
