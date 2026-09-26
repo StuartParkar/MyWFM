@@ -66,6 +66,18 @@ export const PERMISSION_CODES = [
   // attendance), so a decorative reports.view nothing ever checked would be exactly the kind
   // of non-authoritative, client-side-only control build spec section 43 rules out.
   "controltower.view",
+
+  // Intraday (Phase 9): Intraday Control, Break Management, Exceptions/Actions, OT/VTO.
+  "intraday.view",
+  "intraday.manage",
+  "intraday.approve",
+  "intraday.request",
+
+  // Workforce & scenario planning (Phase 10)
+  "workforce.planning.view",
+  "workforce.planning.manage",
+  "scenario.view",
+  "scenario.manage",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];

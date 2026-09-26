@@ -24,6 +24,8 @@ import { staffingRouter } from "./modules/staffing/staffing.routes.js";
 import { formulaRouter } from "./modules/formula/formula.routes.js";
 import { forecastRouter } from "./modules/forecast/forecast.routes.js";
 import { controlTowerRouter } from "./modules/controlTower/controlTower.routes.js";
+import { intradayRouter } from "./modules/intraday/intraday.routes.js";
+import { workforceRouter } from "./modules/workforce/workforce.routes.js";
 
 export function createApp() {
   const app = express();
@@ -60,6 +62,8 @@ export function createApp() {
   app.use("/api/formulas", formulaRouter);
   app.use("/api/forecast", forecastRouter);
   app.use("/api/control-tower", controlTowerRouter);
+  app.use("/api/intraday", intradayRouter);
+  app.use("/api/workforce", workforceRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

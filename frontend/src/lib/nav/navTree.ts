@@ -32,10 +32,10 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Workforce",
     items: [
-      { label: "Workforce Planning", path: "/workforce/planning", available: false, phase: 10, description: "Current/required/future HC, hiring gap, by month/department/process/location/designation." },
+      { label: "Workforce Planning", path: "/workforce/planning", available: true, phase: 10, description: "Current/required/future HC, hiring gap, by month/department/process/location/designation." },
       { label: "Forecast", path: "/workforce/forecast", available: true, phase: 7, description: "Deterministic forecast engine: base forecast x trend x seasonality x holiday, with accuracy/MAE/MAPE/bias." },
       { label: "Staffing", path: "/workforce/staffing", available: true, phase: 7, description: "Required/scheduled/actual staffing gap, coverage and capacity utilization." },
-      { label: "Scenarios", path: "/workforce/scenarios", available: false, phase: 10, description: "What-if scenario planning (volume/AHT/shrinkage/HC changes) that never touches live data." },
+      { label: "Scenarios", path: "/workforce/scenarios", available: true, phase: 10, description: "What-if scenario planning (volume/AHT/shrinkage/HC changes) that never touches live data." },
     ],
   },
   {
@@ -52,11 +52,11 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Intraday",
     items: [
-      { label: "Intraday Control", path: "/intraday/control", available: false, phase: 9, description: "Interval-level required/scheduled/present/available HC, gap, calls, AHT, occupancy, service level." },
-      { label: "Break Management", path: "/intraday/breaks", available: false, phase: 9, description: "Projected present HC vs. required HC as agents go on break, with coverage exceptions." },
-      { label: "Exceptions", path: "/intraday/exceptions", available: false, phase: 9, description: "Configurable-threshold exception engine across staffing, service level, attendance and data quality." },
-      { label: "Actions", path: "/intraday/actions", available: false, phase: 9, description: "The WFM action tracker: exception detected -> acknowledged -> action taken -> resolved." },
-      { label: "OT / VTO", path: "/intraday/ot-vto", available: false, phase: 9, description: "Overtime, early release and VTO requests with before/after capacity impact." },
+      { label: "Intraday Control", path: "/intraday/control", available: true, phase: 9, description: "Interval-level required/scheduled/present/available HC, gap, calls, AHT, occupancy, service level." },
+      { label: "Break Management", path: "/intraday/breaks", available: true, phase: 9, description: "Projected present HC vs. required HC as agents go on break, with coverage exceptions." },
+      { label: "Exceptions", path: "/intraday/exceptions", available: true, phase: 9, description: "Configurable-threshold exception engine across staffing, service level, attendance and data quality." },
+      { label: "Actions", path: "/intraday/actions", available: true, phase: 9, description: "The WFM action tracker: exception detected -> acknowledged -> action taken -> resolved." },
+      { label: "OT / VTO", path: "/intraday/ot-vto", available: true, phase: 9, description: "Overtime, early release and VTO requests with before/after capacity impact." },
     ],
   },
   {
@@ -77,7 +77,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Staffing", path: "/reports/staffing", available: true, phase: 8, description: "Staffing gap and coverage reporting with period comparison." },
       { label: "Forecast", path: "/reports/forecast", available: true, phase: 8, description: "Forecast vs. actual, accuracy, MAE, MAPE, bias reporting." },
       { label: "Roster", path: "/reports/roster", available: true, phase: 8, description: "Roster coverage, requirement vs. published, and version history reporting." },
-      { label: "Exceptions", path: "/reports/exceptions", available: false, phase: 9, description: "Exception volume and resolution reporting across every exception category - waits on Phase 9's exception engine; there is nothing real to report before it exists." },
+      { label: "Exceptions", path: "/reports/exceptions", available: true, phase: 9, description: "Exception volume and resolution reporting across every exception category." },
       { label: "Custom Reports", path: "/reports/custom", available: true, phase: 8, description: "Ad-hoc report building against the Calculation Ledger." },
     ],
   },

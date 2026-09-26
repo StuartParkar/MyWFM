@@ -23,7 +23,8 @@ USING (VALUES
     ('staffing.standard_shift_hours',    '9',               'NUMBER',  'STAFFING',     'Assumed productive hours per scheduled agent per day, used by Required Productive HC/Capacity/Occupancy (build spec section 19) until per-shift durations are wired into these formulas instead.'),
     ('forecast.trend_lookback_weeks',    '4',               'NUMBER',  'FORECAST',     'Weeks of trailing history compared (most recent half vs. prior half) to derive the Forecast Engine''s trend factor (build spec section 21).'),
     ('forecast.seasonality_lookback_weeks','8',              'NUMBER', 'FORECAST',     'Weeks of trailing history averaged per day-of-week to derive the Forecast Engine''s seasonality factor.'),
-    ('forecast.holiday_volume_factor',   '1',               'NUMBER',  'FORECAST',     'Multiplier applied to the base forecast on a master.Holiday date. Left neutral (1 = no adjustment) until enough real multi-holiday call history exists to calibrate a real factor - a travel BPO cannot assume holidays mean lower volume the way most call centers do.')
+    ('forecast.holiday_volume_factor',   '1',               'NUMBER',  'FORECAST',     'Multiplier applied to the base forecast on a master.Holiday date. Left neutral (1 = no adjustment) until enough real multi-holiday call history exists to calibrate a real factor - a travel BPO cannot assume holidays mean lower volume the way most call centers do.'),
+    ('intraday.interval_minutes',        '30',              'NUMBER',  'INTRADAY',     'Bucket width (minutes) Intraday Control and Break Management group interval-level Required/Scheduled/Present/Available HC and Calls/AHT/Occupancy/Service Level into (build spec section 20). 30 matches the most common phone-system export interval seen so far.')
 ) AS source (SettingKey, SettingValue, ValueType, Category, Description)
 ON target.SettingKey = source.SettingKey AND target.Version = 1
 WHEN NOT MATCHED THEN

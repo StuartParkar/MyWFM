@@ -56,7 +56,15 @@ USING (VALUES
     ('staffing.view',       'staffing', 'View roster coverage, staffing gap and actual staffing gap.'),
     ('formula.view',        'formula', 'Browse the Formula Library and the Calculation Ledger.'),
     ('forecast.view',       'forecast', 'View the deterministic call-volume Forecast Engine and its accuracy (MAE/MAPE/Bias).'),
-    ('controltower.view',   'controltower', 'View the company-wide Control Tower dashboard and Explain This Number drilldown.')
+    ('controltower.view',   'controltower', 'View the company-wide Control Tower dashboard and Explain This Number drilldown.'),
+    ('intraday.view',       'intraday', 'View Intraday Control, Break Management, Exceptions/Actions and OT/VTO requests.'),
+    ('intraday.manage',     'intraday', 'Acknowledge/action/resolve exceptions and record break sessions.'),
+    ('intraday.approve',    'intraday', 'Approve or reject OT/VTO requests.'),
+    ('intraday.request',    'intraday', 'Submit an OT/VTO request.'),
+    ('workforce.planning.view',   'workforce', 'View Workforce Planning (current/required/future HC, hiring gap).'),
+    ('workforce.planning.manage', 'workforce', 'Create/edit Workforce Plan targets.'),
+    ('scenario.view',       'workforce', 'View saved what-if scenarios.'),
+    ('scenario.manage',     'workforce', 'Create/edit what-if scenarios (never touches live data).')
 ) AS source (PermissionCode, ModuleName, Description)
 ON target.PermissionCode = source.PermissionCode
 WHEN MATCHED THEN
@@ -83,7 +91,9 @@ USING (
             'masterdata.view', 'import.view', 'import.execute', 'dataquality.view',
             'roster.view', 'roster.review.wfm', 'roster.change', 'attendance.view', 'attendance.manage', 'calls.view',
             'shrinkage.view', 'shrinkage.manage', 'staffing.view', 'formula.view',
-            'forecast.view', 'controltower.view'
+            'forecast.view', 'controltower.view',
+            'intraday.view', 'intraday.manage', 'intraday.approve', 'intraday.request',
+            'workforce.planning.view', 'workforce.planning.manage', 'scenario.view', 'scenario.manage'
         )
     WHERE r.RoleCode = 'WFM'
 
@@ -92,7 +102,10 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.hod', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view', 'forecast.view', 'controltower.view')
+        ON p.PermissionCode IN (
+            'masterdata.view', 'roster.view', 'roster.review.hod', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view', 'forecast.view', 'controltower.view',
+            'intraday.view', 'intraday.approve', 'workforce.planning.view', 'scenario.view'
+        )
     WHERE r.RoleCode = 'HOD'
 
     UNION ALL
@@ -100,7 +113,10 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.leader', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view', 'forecast.view', 'controltower.view')
+        ON p.PermissionCode IN (
+            'masterdata.view', 'roster.view', 'roster.review.leader', 'attendance.view', 'calls.view', 'shrinkage.view', 'staffing.view', 'forecast.view', 'controltower.view',
+            'intraday.view', 'intraday.manage', 'intraday.request', 'workforce.planning.view'
+        )
     WHERE r.RoleCode = 'LEADER'
 
     UNION ALL
@@ -108,7 +124,7 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('roster.view', 'roster.submit')
+        ON p.PermissionCode IN ('roster.view', 'roster.submit', 'intraday.view', 'intraday.request')
     WHERE r.RoleCode = 'REQUESTOR'
 ) AS source (RoleId, PermissionId)
 ON target.RoleId = source.RoleId AND target.PermissionId = source.PermissionId

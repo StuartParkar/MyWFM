@@ -21,6 +21,14 @@ npm test   # runs shared, then backend (vitest)
 - `backend/tests/auditService.test.ts` - `recordAudit` builds the expected
   INSERT (mocked `mssql` pool) and logs `CRITICAL` instead of throwing on
   failure.
+- Every module built since (Phases 3-10: imports, roster, attendance, calls,
+  shrinkage/staffing/forecast/Control Tower; Phase 9's intraday
+  interval-bucketing engine, exception engine and OT/VTO capacity-impact
+  preview; Phase 10's Workforce Planning projection and Scenario Planning
+  baseline/delta math) has its own `backend/tests/*.test.ts` following the
+  same mock-the-repository-layer, exercise-the-real-service pattern - see
+  each module's test file for exactly what it covers rather than this list
+  restating every case; `npm test` runs all of them.
 
 None of these need a real SQL Server - they mock the DB layer or test pure
 functions. There is no integration test against a live SQL Server yet,
@@ -31,7 +39,7 @@ against it is the actual end-to-end check for everything in `database/`.
 
 ## What's not covered yet (by design, not oversight)
 
-Import tests, workflow tests, permission-scope tests beyond RBAC, and
-performance tests (build spec section 70) all depend on modules that don't
-exist yet (Phase 3+). Adding tests for them now would mean testing
-placeholder behavior instead of real behavior.
+Performance tests (build spec section 70), and anything depending on
+Phase 11 (audit/lineage/reprocessing/system health history) or Phase 12
+(hardening) modules that don't exist yet. Adding tests for them now would
+mean testing placeholder behavior instead of real behavior.

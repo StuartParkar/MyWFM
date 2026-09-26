@@ -105,10 +105,39 @@ Phase N" screen instead of a fake one
       derived KPI. Six Reports screens (Workforce/Calls/Attendance/Staffing/
       Forecast/Roster) add period-over-period comparison on top of the same
       real endpoints; Custom Reports is an ad-hoc Calculation Ledger query
-      tool. Reports > Exceptions stays unavailable - there is no exception
-      engine yet to report on (Phase 9).
-- [ ] **Phase 9 - Intraday**: exceptions, action tracker, break management, OT/VTO.
-- [ ] **Phase 10 - Workforce & scenario planning**.
+      tool. Reports > Exceptions was unavailable at this point - no exception
+      engine existed yet to report on (built in Phase 9 below).
+- [x] **Phase 9 - Intraday**: an interval-bucketing engine
+      (`intraday.interval_minutes`, default 30) computes Required/Scheduled/
+      Present/Available HC, Staffing Gap, Calls/AHT/Service Level/Occupancy
+      per bucket for one business date at Intraday Control (`/intraday/
+      control`), correctly extending past calendar midnight for a genuinely
+      overnight-owned shift. Break Management (`/intraday/breaks`) adds real
+      `attendance.BreakSession` tracking against the same engine's projected
+      coverage. A configurable-threshold exception engine (`intraday.
+      ExceptionRule`/`intraday.Exception`) evaluates staffing, service level,
+      attendance and data-quality breaches on demand (no cron), each at its
+      own natural grain, with a strict detected -> acknowledged -> action
+      taken -> resolved lifecycle (Exceptions + Actions screens) - this also
+      unblocks Reports > Exceptions from Phase 8. Overtime/VTO
+      (`intraday.CapacityAdjustmentRequest`, one table for both plus early
+      release) adds a real single-employee before/after Staffing Gap preview,
+      self-service submission resolved from the long-unused `security.
+      [User].EmployeeId` link, and HOD/WFM approval. See
+      `documentation/intraday.md`.
+- [x] **Phase 10 - Workforce & scenario planning**: Workforce Planning
+      (`/workforce/planning`) tracks Current (real, live headcount via
+      `master.EmployeeProcess` - populated since Phase 2, never read before
+      this)/Required (entered target)/Future (Current + this plan's own
+      stated planned hires/exits) HC and the resulting Hiring Gap, at any
+      combination of Department/Process/Location/Designation, versioned the
+      same way Roster's own published assignments are. Scenarios
+      (`/workforce/scenarios`) save only a what-if's input assumptions
+      (volume/AHT/shrinkage/HC change against a real baseline period) -
+      every projected number is recomputed on read with Phase 7's own
+      formulas and never written anywhere, "never touches live data" taken
+      literally. See `documentation/workforce.md`.
+- [ ] **Phase 11 - Audit/lineage**: reprocessing, system health history, backup/restore automation.
 - [ ] **Phase 11 - Audit/lineage**: reprocessing, system health history, backup/restore automation.
 - [ ] **Phase 12 - Hardening**: performance, security, tests, deployment package.
 

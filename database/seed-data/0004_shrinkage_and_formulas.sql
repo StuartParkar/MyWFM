@@ -49,7 +49,8 @@ USING (VALUES
     ('FORECAST_MAE', 1, 'Forecast Mean Absolute Error', 'Mean(|Forecast - Actual Offered Calls|) over a date range (build spec section 21).', 'FORECAST', '2026-01-01'),
     ('FORECAST_MAPE', 1, 'Forecast Mean Absolute Percentage Error', 'Mean(|Forecast - Actual| / Actual) x 100 over a date range, actual-is-zero days excluded (build spec section 21).', 'FORECAST', '2026-01-01'),
     ('FORECAST_BIAS', 1, 'Forecast Bias', 'Mean(Forecast - Actual) over a date range - positive means the engine over-forecasts (build spec section 21).', 'FORECAST', '2026-01-01'),
-    ('ATTENDANCE_PCT', 1, 'Attendance %', 'Present HC / Planned HC x 100, company-wide over a date range (Control Tower) - see documentation/controltower.md.', 'ATTENDANCE', '2026-01-01')
+    ('ATTENDANCE_PCT', 1, 'Attendance %', 'Present HC / Planned HC x 100, company-wide over a date range (Control Tower) - see documentation/controltower.md.', 'ATTENDANCE', '2026-01-01'),
+    ('AVAILABLE_STAFFING_GAP', 1, 'Available Staffing Gap', 'Available HC - Required HC, where Available HC is Present HC minus whoever is currently on a recorded break (build spec section 20''s Break Management) - distinct from Staffing Gap (vs. Scheduled HC) and Actual Staffing Gap (vs. Present HC, break-blind).', 'INTRADAY', '2026-01-01')
 ) AS source (FormulaCode, Version, Name, Description, Category, EffectiveFrom)
 ON target.FormulaCode = source.FormulaCode AND target.Version = source.Version
 WHEN NOT MATCHED THEN

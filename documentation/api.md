@@ -76,6 +76,47 @@ never expect (or parse) more detail from the response body itself.
 | GET | `/api/formulas/ledger` | bearer + `formula.view` | Paginated, `?formulaCode=&entityType=&entityId=&from=&to=` - the Calculation Ledger, newest first |
 | PATCH | `/api/master-data/queues/:id/process` | bearer + `masterdata.manage` | Body `{ processId: number \| null }` - assigns/clears a queue's Process, needed for Calls workload to attribute to a Staffing process |
 
+## Endpoints (Phase 9 - Intraday)
+
+See `documentation/intraday.md` for the interval-bucketing engine, the
+exception rule categories/lifecycle, and the OT/VTO self-service model
+these enforce.
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/api/intraday/interval-summary` | bearer + `intraday.view` | `?businessDate=&processId=` (required: `businessDate`) - one business date bucketed into `intraday.interval_minutes`-wide intervals |
+| GET | `/api/intraday/breaks` | bearer + `intraday.view` | `?businessDate=&processId=` - recorded break sessions for the date |
+| GET | `/api/intraday/breaks/scheduled-employees` | bearer + `intraday.view` | `?businessDate=&processId=` - employees eligible to have a break started |
+| POST | `/api/intraday/breaks` | bearer + `intraday.manage` | Body `{ employeeId, businessDate, breakStart }` |
+| PATCH | `/api/intraday/breaks/:id/end` | bearer + `intraday.manage` | Body `{ breakEnd }` - no-ops if already ended |
+| GET | `/api/intraday/exceptions` | bearer + `intraday.view` | `?status=&excludeResolved=&category=&from=&to=` - `status` and `excludeResolved` are mutually exclusive |
+| POST | `/api/intraday/exceptions/scan` | bearer + `intraday.manage` | Body `{ businessDate, processId? }` - runs every active rule; Data Quality ignores `businessDate` (see `documentation/intraday.md`) |
+| PATCH | `/api/intraday/exceptions/:id/acknowledge` | bearer + `intraday.manage` | `DETECTED -> ACKNOWLEDGED` only |
+| PATCH | `/api/intraday/exceptions/:id/action` | bearer + `intraday.manage` | Body `{ actionTaken }` - `ACKNOWLEDGED -> ACTION_TAKEN` only |
+| PATCH | `/api/intraday/exceptions/:id/resolve` | bearer + `intraday.manage` | Body `{ resolutionNotes? }` - `ACTION_TAKEN -> RESOLVED` only |
+| GET | `/api/intraday/capacity-requests` | bearer + `intraday.view` | `?businessDate=&status=&employeeId=` |
+| GET | `/api/intraday/capacity-requests/impact` | bearer + `intraday.view` | `?employeeId=&businessDate=&requestType=&hoursRequested=` - real before/after Staffing Gap preview |
+| POST | `/api/intraday/capacity-requests` | bearer + `intraday.request` or `intraday.manage` | Body `{ requestType, employeeId?, businessDate, hoursRequested, reason? }` - `employeeId` is ignored (resolved server-side) unless the caller has `intraday.manage` |
+| PATCH | `/api/intraday/capacity-requests/:id/approve` | bearer + `intraday.approve` | Body `{ decisionNotes? }` |
+| PATCH | `/api/intraday/capacity-requests/:id/reject` | bearer + `intraday.approve` | Body `{ decisionNotes? }` |
+| PATCH | `/api/intraday/capacity-requests/:id/cancel` | bearer + `intraday.view` | Only the requester or `intraday.manage` |
+
+## Endpoints (Phase 10 - Workforce & Scenario Planning)
+
+See `documentation/workforce.md` for how Current/Future HC and a
+scenario's projected numbers are actually computed.
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/api/workforce/plans` | bearer + `workforce.planning.view` | `?from=&to=&departmentId=&processId=&locationId=&designationId=` - each plan with its live Current HC/Future HC/Hiring Gap projection |
+| POST | `/api/workforce/plans` | bearer + `workforce.planning.manage` | Body `{ businessMonth, departmentId?, processId?, locationId?, designationId?, requiredHC, plannedHiresHC?, plannedExitsHC?, notes? }` - at least one dimension is required; versions the prior plan at the same key rather than overwriting it |
+| GET | `/api/workforce/scenarios` | bearer + `scenario.view` | Saved scenarios (inputs only) |
+| GET | `/api/workforce/scenarios/:id/evaluate` | bearer + `scenario.view` | Real baseline + projected numbers for a saved scenario, computed fresh every call |
+| POST | `/api/workforce/scenarios/preview` | bearer + `scenario.view` | Body: a scenario's inputs (see POST `/scenarios`) - evaluates without saving |
+| POST | `/api/workforce/scenarios` | bearer + `scenario.manage` | Body `{ scenarioName, processId?, baselineFrom, baselineTo, volumeChangePct?, ahtChangePct?, shrinkagePctOverride?, hcChange?, notes? }` |
+| PATCH | `/api/workforce/scenarios/:id` | bearer + `scenario.manage` | Same body as POST |
+| DELETE | `/api/workforce/scenarios/:id` | bearer + `scenario.manage` | |
+
 Every future module's endpoints follow the
 same envelope, auth (`requireAuth`), authorization
 (`requirePermission("module.action")`) and validation (`zod`, surfaced as

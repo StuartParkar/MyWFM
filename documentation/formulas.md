@@ -187,12 +187,12 @@ call history accumulates, not before.
   promised but not yet provided (see the org-hierarchy import's own
   documentation) - opening/closing HC and attrition rate would otherwise be
   guessed at.
-- **Interval-level** Calls/AHT/Occupancy/Service Level (as opposed to the
-  daily/summary versions above) is Intraday Control, Phase 9 - a genuinely
-  different grain and screen, not an oversight here.
+Interval-level Calls/AHT/Occupancy/Service Level (as opposed to the
+daily/summary versions above) is now built - see Intraday Control and
+`documentation/intraday.md`, a genuinely different grain and screen from
+this file's own daily/summary formulas, not a duplicate of them.
 
-Each of these gets built the moment its real input (or its phase) arrives,
-not before.
+Each of the above gets built the moment its real input arrives, not before.
 
 ## Screens
 

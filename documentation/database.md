@@ -32,6 +32,11 @@ operate the migration runner.
 | `shrinkage` | `ShrinkageCategory`, `ShrinkageEntry` | Unavailable time by category (Planned Leave, Training, Break, ...), manual entry / authorized adjustment - see `documentation/formulas.md` |
 | `formula` | `FormulaDefinition` | The Formula Library's browsable catalog - metadata only (name/description/version/effective date), never an executable expression |
 | `formula` | `CalculationLedger` | Every computed KPI value, its formula version and inputs, append-only - see `documentation/formulas.md` |
+| `attendance` | `BreakSession` | Real break start/end tracking (`AttendanceSession.BreakMinutes` is an aggregate, not granular times) - see `documentation/intraday.md` |
+| `intraday` | `ExceptionRule`, `Exception` | Configurable-threshold rule catalog and its detected -> acknowledged -> action taken -> resolved lifecycle - see `documentation/intraday.md` |
+| `intraday` | `CapacityAdjustmentRequest` | Overtime and VTO (incl. early release) share one table, one `RequestType` discriminator - see `documentation/intraday.md` |
+| `workforce` | `WorkforcePlan` | Versioned monthly HC target + planned hires/exits, any combination of Department/Process/Location/Designation - see `documentation/workforce.md` |
+| `workforce` | `Scenario` | A saved what-if's input assumptions only - its projected outputs are computed on read, never stored - see `documentation/workforce.md` |
 
 `master.Employee` is loaded from the real org hierarchy sample via
 `npm run import:org-hierarchy --workspace=backend`
