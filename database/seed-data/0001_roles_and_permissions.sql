@@ -49,7 +49,8 @@ USING (VALUES
     ('roster.review.wfm',   'roster', 'WFM-level roster requirement review (approve/reject/send back) - this also publishes on approve, see documentation/roster.md.'),
     ('roster.change',       'roster', 'Change a published roster assignment (shift/weekly-off).'),
     ('attendance.view',     'attendance', 'View attendance sessions and derived daily attendance summaries.'),
-    ('attendance.manage',   'attendance', 'Record or adjust attendance sessions (manual entry / authorized adjustment).')
+    ('attendance.manage',   'attendance', 'Record or adjust attendance sessions (manual entry / authorized adjustment).'),
+    ('calls.view',          'calls', 'View queue-level and agent-level call interval records.')
 ) AS source (PermissionCode, ModuleName, Description)
 ON target.PermissionCode = source.PermissionCode
 WHEN MATCHED THEN
@@ -74,7 +75,7 @@ USING (
         ON p.PermissionCode IN (
             'user.view', 'config.view', 'audit.view', 'system.health.view', 'job.view', 'job.manage',
             'masterdata.view', 'import.view', 'import.execute', 'dataquality.view',
-            'roster.view', 'roster.review.wfm', 'roster.change', 'attendance.view', 'attendance.manage'
+            'roster.view', 'roster.review.wfm', 'roster.change', 'attendance.view', 'attendance.manage', 'calls.view'
         )
     WHERE r.RoleCode = 'WFM'
 
@@ -83,7 +84,7 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.hod', 'attendance.view')
+        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.hod', 'attendance.view', 'calls.view')
     WHERE r.RoleCode = 'HOD'
 
     UNION ALL
@@ -91,7 +92,7 @@ USING (
     SELECT r.RoleId, p.PermissionId
     FROM security.Role r
     JOIN security.Permission p
-        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.leader', 'attendance.view')
+        ON p.PermissionCode IN ('masterdata.view', 'roster.view', 'roster.review.leader', 'attendance.view', 'calls.view')
     WHERE r.RoleCode = 'LEADER'
 
     UNION ALL

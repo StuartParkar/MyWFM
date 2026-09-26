@@ -49,6 +49,9 @@ export const PERMISSION_CODES = [
   // Attendance & Business Day Engine (Phase 5)
   "attendance.view",
   "attendance.manage",
+
+  // Calls (Phase 6) - view-only: no importer exists yet to gate a manage permission against.
+  "calls.view",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];

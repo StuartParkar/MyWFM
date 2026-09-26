@@ -18,6 +18,7 @@ import { importsRouter } from "./modules/imports/import.routes.js";
 import { rosterRouter } from "./modules/roster/roster.routes.js";
 import { attendanceRouter } from "./modules/attendance/attendance.routes.js";
 import { businessDayRouter } from "./modules/businessday/businessday.routes.js";
+import { callsRouter } from "./modules/calls/calls.routes.js";
 
 export function createApp() {
   const app = express();
@@ -48,6 +49,7 @@ export function createApp() {
   app.use("/api/roster", rosterRouter);
   app.use("/api/attendance", attendanceRouter);
   app.use("/api/business-day", businessDayRouter);
+  app.use("/api/calls", callsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
