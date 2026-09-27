@@ -23,8 +23,8 @@ const listProcesses = vi.fn();
 vi.mock("../src/modules/masterdata/masterdata.repository.js", () => ({ listProcesses }));
 
 const listScheduleAndSessionDays = vi.fn();
-const listSessionsForRange = vi.fn();
-vi.mock("../src/modules/attendance/attendance.repository.js", () => ({ listScheduleAndSessionDays, listSessionsForRange }));
+const listSessionsForKeys = vi.fn();
+vi.mock("../src/modules/attendance/attendance.repository.js", () => ({ listScheduleAndSessionDays, listSessionsForKeys }));
 
 const recordCalculation = vi.fn(async () => undefined);
 vi.mock("../src/modules/formula/calculationLedger.js", () => ({ recordCalculation }));
@@ -59,7 +59,7 @@ beforeEach(() => {
   listCallEvents.mockReset().mockResolvedValue([]);
   listProcesses.mockReset();
   listScheduleAndSessionDays.mockReset();
-  listSessionsForRange.mockReset();
+  listSessionsForKeys.mockReset();
   recordCalculation.mockClear();
   recordAudit.mockClear();
 });
@@ -105,7 +105,7 @@ describe("scanForExceptions", () => {
     listScheduleAndSessionDays.mockResolvedValue(
       paginated([{ employeeId: "e1", employeeCode: "E1", employeeName: "Alice", businessDate: "2026-09-25", shiftId: 1, shiftCode: "D1", startTime: "09:00", endTime: "17:00", isOvernight: false, isWeeklyOff: false }]),
     );
-    listSessionsForRange.mockResolvedValue([
+    listSessionsForKeys.mockResolvedValue([
       { attendanceSessionId: 1, employeeId: "e1", businessDate: "2026-09-25", sessionStart: "2026-09-25T09:20:00.000Z", sessionEnd: "2026-09-25T17:00:00.000Z", breakMinutes: 0, source: "MANUAL" },
     ]);
     ensureException.mockResolvedValue(1);
@@ -129,7 +129,7 @@ describe("scanForExceptions", () => {
     listScheduleAndSessionDays.mockResolvedValue(
       paginated([{ employeeId: "e1", employeeCode: "E1", employeeName: "Alice", businessDate: "2026-09-25", shiftId: 1, shiftCode: "D1", startTime: "09:00", endTime: "17:00", isOvernight: false, isWeeklyOff: false }]),
     );
-    listSessionsForRange.mockResolvedValue([
+    listSessionsForKeys.mockResolvedValue([
       { attendanceSessionId: 1, employeeId: "e1", businessDate: "2026-09-25", sessionStart: "2026-09-25T09:02:00.000Z", sessionEnd: "2026-09-25T17:00:00.000Z", breakMinutes: 0, source: "MANUAL" },
     ]);
 

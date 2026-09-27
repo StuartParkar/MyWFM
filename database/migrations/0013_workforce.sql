@@ -78,7 +78,7 @@ BEGIN
         -- from the same Phase 7 formulas everything else uses, so a scenario always reflects
         -- the current real data behind its chosen baseline period, not a stale copy.
         BaselineFrom            DATE             NOT NULL,
-        BaselineTo               DATE             NOT NULL CONSTRAINT CK_Scenario_BaselineRange CHECK (BaselineTo >= BaselineFrom),
+        BaselineTo               DATE             NOT NULL,
         VolumeChangePct           DECIMAL(6, 2)    NOT NULL CONSTRAINT DF_Scenario_VolumeChangePct DEFAULT (0),
         AhtChangePct               DECIMAL(6, 2)    NOT NULL CONSTRAINT DF_Scenario_AhtChangePct DEFAULT (0),
         -- NULL = use the baseline period's own real (averaged) Shrinkage % unmodified.
@@ -87,7 +87,10 @@ BEGIN
         Notes                          NVARCHAR(500)    NULL,
         CreatedByUserId                UNIQUEIDENTIFIER NOT NULL CONSTRAINT FK_Scenario_CreatedBy REFERENCES security.[User](UserId),
         CreatedAt                       DATETIME2(3)     NOT NULL CONSTRAINT DF_Scenario_CreatedAt DEFAULT (SYSUTCDATETIME()),
-        ModifiedAt                       DATETIME2(3)     NOT NULL CONSTRAINT DF_Scenario_ModifiedAt DEFAULT (SYSUTCDATETIME())
+        ModifiedAt                       DATETIME2(3)     NOT NULL CONSTRAINT DF_Scenario_ModifiedAt DEFAULT (SYSUTCDATETIME()),
+        -- A column-level CHECK cannot reference another column in SQL Server (error 8141) -
+        -- this must be a table-level constraint.
+        CONSTRAINT CK_Scenario_BaselineRange CHECK (BaselineTo >= BaselineFrom)
     );
     CREATE INDEX IX_Scenario_Process ON [workforce].Scenario(ProcessId);
 END

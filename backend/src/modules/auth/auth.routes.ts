@@ -3,6 +3,8 @@ import type { ApiSuccess, LoginResponse } from "@mywfm/shared";
 import { env } from "../../config/env.js";
 import { UnauthorizedError } from "../../errors/AppError.js";
 import { requireAuth } from "../../middleware/auth.js";
+import { authRateLimiter } from "../../middleware/rateLimit.js";
+import { requireFetchHeader } from "../../middleware/requireFetchHeader.js";
 import { toRequestContext } from "../../middleware/requestContext.js";
 import * as authService from "./auth.service.js";
 import { loginRequestSchema } from "./auth.validation.js";
@@ -22,7 +24,7 @@ function setRefreshCookie(res: import("express").Response, token: string, expire
   });
 }
 
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", authRateLimiter, async (req, res) => {
   const { email, password } = loginRequestSchema.parse(req.body);
   const ctx = toRequestContext(req);
   const result = await authService.login(email, password, ctx);
@@ -35,7 +37,7 @@ authRouter.post("/login", async (req, res) => {
   res.status(200).json(body);
 });
 
-authRouter.post("/refresh", async (req, res) => {
+authRouter.post("/refresh", authRateLimiter, requireFetchHeader, async (req, res) => {
   const rawRefreshToken = req.cookies?.[REFRESH_COOKIE_NAME] as string | undefined;
   if (!rawRefreshToken) {
     throw new UnauthorizedError("No active session.");
@@ -52,7 +54,7 @@ authRouter.post("/refresh", async (req, res) => {
   res.status(200).json(body);
 });
 
-authRouter.post("/logout", async (req, res) => {
+authRouter.post("/logout", requireFetchHeader, async (req, res) => {
   const rawRefreshToken = req.cookies?.[REFRESH_COOKIE_NAME] as string | undefined;
   if (rawRefreshToken) {
     await authService.logout(rawRefreshToken, toRequestContext(req));

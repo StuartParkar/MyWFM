@@ -32,6 +32,12 @@ async function parseApiResponse<T>(res: Response): Promise<ApiResponse<T> | null
   }
 }
 
+// Required by the backend's requireFetchHeader CSRF defense-in-depth on the
+// cookie-only-authenticated /api/auth/refresh and /api/auth/logout routes -
+// see backend/src/middleware/requireFetchHeader.ts. A cross-site <form> POST
+// cannot set this header, but this same-origin fetch always does.
+const FETCH_MARKER_HEADERS = { "X-Requested-With": "XMLHttpRequest" } as const;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
@@ -54,7 +60,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/auth/refresh", { method: "POST", credentials: "include" });
+        const res = await fetch("/api/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+          headers: FETCH_MARKER_HEADERS,
+        });
         const body = await parseApiResponse<LoginResponse>(res);
         if (cancelled) return;
         if (res.ok && body?.success) applySession(body.data);
@@ -87,7 +97,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" }).catch(() => undefined);
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include", headers: FETCH_MARKER_HEADERS }).catch(
+      () => undefined,
+    );
     clearSession();
   }, [clearSession]);
 
@@ -102,7 +114,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const first = await fetch(path, buildInit(accessTokenRef.current));
       if (first.status !== 401) return first;
 
-      const refreshRes = await fetch("/api/auth/refresh", { method: "POST", credentials: "include" });
+      const refreshRes = await fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+        headers: FETCH_MARKER_HEADERS,
+      });
       const refreshBody = await parseApiResponse<LoginResponse>(refreshRes);
       if (refreshRes.ok && refreshBody?.success) {
         applySession(refreshBody.data);

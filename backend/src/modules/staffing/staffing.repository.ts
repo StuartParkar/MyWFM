@@ -39,12 +39,14 @@ export async function listPublishedRosterKeysByProcess(params: { from: string; t
       IsWeeklyOff: boolean;
     }>(`
       SELECT
-        pr.EmployeeId, CONVERT(VARCHAR(10), pr.BusinessDate, 23) AS BusinessDate, rr.ProcessId, proc.ProcessName,
+        pr.EmployeeId, CONVERT(VARCHAR(10), pr.BusinessDate, 23) AS BusinessDate, rr.ProcessId, mp.ProcessName,
         pr.ShiftId, CONVERT(VARCHAR(5), sh.StartTime, 108) AS StartTime, CONVERT(VARCHAR(5), sh.EndTime, 108) AS EndTime,
         sh.IsOvernight, pr.IsWeeklyOff
       FROM [roster].PublishedRoster pr
       JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
-      JOIN [master].Process proc ON proc.ProcessId = rr.ProcessId
+      -- "proc" is rejected by SQL Server as a table alias - found by running
+      -- this against a real server.
+      JOIN [master].Process mp ON mp.ProcessId = rr.ProcessId
       LEFT JOIN [master].Shift sh ON sh.ShiftId = pr.ShiftId
       WHERE pr.IsActive = 1 AND pr.BusinessDate BETWEEN @From AND @To
         AND (@ProcessId IS NULL OR rr.ProcessId = @ProcessId)
@@ -169,21 +171,23 @@ export async function listPublishedRequirementCoverage(params: {
     }>(`
       SELECT
         rr.RosterRequirementId, CONVERT(VARCHAR(10), rr.BusinessDate, 23) AS BusinessDate,
-        rr.DepartmentId, dept.DepartmentName, rr.ProcessId, proc.ProcessName, rr.ShiftId, sh.ShiftCode,
+        rr.DepartmentId, dept.DepartmentName, rr.ProcessId, mp.ProcessName, rr.ShiftId, sh.ShiftCode,
         rr.RequiredHC,
         COUNT(DISTINCT pr.PublishedRosterId) AS ScheduledHC,
         COUNT(DISTINCT CASE WHEN att.AttendanceSessionId IS NOT NULL THEN pr.EmployeeId END) AS PresentHC,
         COUNT(*) OVER() AS TotalCount
       FROM [roster].RosterRequirement rr
       LEFT JOIN [master].Department dept ON dept.DepartmentId = rr.DepartmentId
-      LEFT JOIN [master].Process proc ON proc.ProcessId = rr.ProcessId
+      -- "proc" is rejected by SQL Server as a table alias - see the same fix
+      -- above in this file.
+      LEFT JOIN [master].Process mp ON mp.ProcessId = rr.ProcessId
       LEFT JOIN [master].Shift sh ON sh.ShiftId = rr.ShiftId
       LEFT JOIN [roster].PublishedRoster pr ON pr.RosterRequirementId = rr.RosterRequirementId AND pr.IsActive = 1
       LEFT JOIN [attendance].AttendanceSession att ON att.EmployeeId = pr.EmployeeId AND att.BusinessDate = pr.BusinessDate
       WHERE rr.Status = 'PUBLISHED' AND rr.BusinessDate BETWEEN @From AND @To
         AND (@DepartmentId IS NULL OR rr.DepartmentId = @DepartmentId)
         AND (@ProcessId IS NULL OR rr.ProcessId = @ProcessId)
-      GROUP BY rr.RosterRequirementId, rr.BusinessDate, rr.DepartmentId, dept.DepartmentName, rr.ProcessId, proc.ProcessName, rr.ShiftId, sh.ShiftCode, rr.RequiredHC
+      GROUP BY rr.RosterRequirementId, rr.BusinessDate, rr.DepartmentId, dept.DepartmentName, rr.ProcessId, mp.ProcessName, rr.ShiftId, sh.ShiftCode, rr.RequiredHC
       ORDER BY rr.BusinessDate DESC
       OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
     `);

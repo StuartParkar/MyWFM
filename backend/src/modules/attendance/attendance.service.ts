@@ -230,7 +230,9 @@ export async function listDailySummaries(params: {
   };
 
   const keys = await repo.listScheduleAndSessionDays(params);
-  const sessions = await repo.listSessionsForRange(params.employeeId, params.from, params.to);
+  const sessions = await repo.listSessionsForKeys(
+    keys.items.map((key) => ({ employeeId: key.employeeId, businessDate: key.businessDate })),
+  );
 
   const sessionsByKey = new Map<string, repo.AttendanceSessionRow[]>();
   for (const s of sessions) {

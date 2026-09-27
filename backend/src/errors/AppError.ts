@@ -51,3 +51,9 @@ export class ServiceUnavailableError extends AppError {
     super("SERVICE_UNAVAILABLE", message, 503, logContext);
   }
 }
+
+export class TooManyRequestsError extends AppError {
+  constructor(message = "Too many requests. Please try again later.") {
+    super("TOO_MANY_REQUESTS", message, 429);
+  }
+}

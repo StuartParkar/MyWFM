@@ -117,12 +117,14 @@ export async function listPlans(params: { from?: string; to?: string; department
     }>(`
       SELECT
         p.WorkforcePlanId, CONVERT(VARCHAR(10), p.BusinessMonth, 23) AS BusinessMonth,
-        p.DepartmentId, dept.DepartmentName, p.ProcessId, proc.ProcessName, p.LocationId, loc.LocationName, p.DesignationId, des.DesignationName,
+        p.DepartmentId, dept.DepartmentName, p.ProcessId, mp.ProcessName, p.LocationId, loc.LocationName, p.DesignationId, des.DesignationName,
         p.RequiredHC, p.PlannedHiresHC, p.PlannedExitsHC, p.Notes, p.Version,
         u.DisplayName AS CreatedByName, p.CreatedAt
       FROM [workforce].WorkforcePlan p
       LEFT JOIN [master].Department dept ON dept.DepartmentId = p.DepartmentId
-      LEFT JOIN [master].Process proc ON proc.ProcessId = p.ProcessId
+      -- "proc" is rejected by SQL Server as a table alias (Incorrect syntax
+      -- near the keyword 'proc') - found by running this against a real server.
+      LEFT JOIN [master].Process mp ON mp.ProcessId = p.ProcessId
       LEFT JOIN [master].Location loc ON loc.LocationId = p.LocationId
       LEFT JOIN [master].Designation des ON des.DesignationId = p.DesignationId
       JOIN security.[User] u ON u.UserId = p.CreatedByUserId
@@ -133,7 +135,7 @@ export async function listPlans(params: { from?: string; to?: string; department
         AND (@ProcessId IS NULL OR p.ProcessId = @ProcessId)
         AND (@LocationId IS NULL OR p.LocationId = @LocationId)
         AND (@DesignationId IS NULL OR p.DesignationId = @DesignationId)
-      ORDER BY p.BusinessMonth, dept.DepartmentName, proc.ProcessName, loc.LocationName, des.DesignationName
+      ORDER BY p.BusinessMonth, dept.DepartmentName, mp.ProcessName, loc.LocationName, des.DesignationName
     `);
   return result.recordset.map((r) => ({
     workforcePlanId: r.WorkforcePlanId,
@@ -233,12 +235,14 @@ export interface ScenarioRow extends ScenarioInput {
 }
 
 const SCENARIO_SELECT = `
-  SELECT s.ScenarioId, s.ScenarioName, s.ProcessId, proc.ProcessName,
+  SELECT s.ScenarioId, s.ScenarioName, s.ProcessId, mp.ProcessName,
          CONVERT(VARCHAR(10), s.BaselineFrom, 23) AS BaselineFrom, CONVERT(VARCHAR(10), s.BaselineTo, 23) AS BaselineTo,
          s.VolumeChangePct, s.AhtChangePct, s.ShrinkagePctOverride, s.HcChange, s.Notes,
          u.DisplayName AS CreatedByName, s.CreatedAt, s.ModifiedAt
   FROM [workforce].Scenario s
-  LEFT JOIN [master].Process proc ON proc.ProcessId = s.ProcessId
+  -- "proc" is rejected by SQL Server as a table alias - see the same fix in
+  -- listWorkforcePlans above.
+  LEFT JOIN [master].Process mp ON mp.ProcessId = s.ProcessId
   JOIN security.[User] u ON u.UserId = s.CreatedByUserId
 `;
 

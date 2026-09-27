@@ -58,12 +58,15 @@ export interface RequirementRow {
 const REQUIREMENT_SELECT = `
   SELECT
     rr.RosterRequirementId, CONVERT(VARCHAR(10), rr.BusinessDate, 23) AS BusinessDate,
-    rr.LocationId, loc.LocationName, rr.ProcessId, proc.ProcessName, rr.DepartmentId, dept.DepartmentName,
+    rr.LocationId, loc.LocationName, rr.ProcessId, mp.ProcessName, rr.DepartmentId, dept.DepartmentName,
     rr.ShiftId, sh.ShiftCode, rr.RequiredHC, rr.Notes, rr.RequestedByUserId, u.DisplayName AS RequestedByName,
     rr.Status, rr.CreatedAt, rr.ModifiedAt
   FROM [roster].RosterRequirement rr
   LEFT JOIN [master].Location loc ON loc.LocationId = rr.LocationId
-  LEFT JOIN [master].Process proc ON proc.ProcessId = rr.ProcessId
+  -- "proc" is rejected by SQL Server as a table alias (Incorrect syntax near
+  -- the keyword 'proc') - found by actually running this against a real
+  -- server; every other JOIN alias here is a plain unreserved word.
+  LEFT JOIN [master].Process mp ON mp.ProcessId = rr.ProcessId
   LEFT JOIN [master].Department dept ON dept.DepartmentId = rr.DepartmentId
   LEFT JOIN [master].Shift sh ON sh.ShiftId = rr.ShiftId
   LEFT JOIN security.[User] u ON u.UserId = rr.RequestedByUserId
@@ -211,42 +214,67 @@ export async function listAssignments(requirementId: number): Promise<{ employee
   return result.recordset.map((r) => ({ employeeId: r.EmployeeId, fullName: r.FullName, employeeCode: r.EmployeeCode }));
 }
 
-/** Publishes: for every assigned employee, creates a new active PublishedRoster version and deactivates the previous one. */
+/**
+ * Publishes: for every assigned employee, creates a new active PublishedRoster
+ * version and deactivates the previous one. Batched into 3 queries total
+ * (regardless of headcount) instead of 2-3 sequential round trips per
+ * employee, inside one transaction so a partial failure can't leave some
+ * employees published and others not.
+ */
 export async function publishRequirement(requirementId: number, publishedByUserId: string): Promise<number> {
   const pool = await getPool();
   const requirement = await getRequirement(requirementId);
   if (!requirement) throw new Error("Requirement not found");
   const assignments = await listAssignments(requirementId);
+  if (assignments.length === 0) return 0;
 
-  for (const assignment of assignments) {
-    const existing = await pool
-      .request()
-      .input("EmployeeId", sql.UniqueIdentifier, assignment.employeeId)
-      .input("BusinessDate", sql.Date, requirement.BusinessDate)
-      .query<{ PublishedRosterId: number; Version: number }>(`
-        SELECT PublishedRosterId, Version FROM [roster].PublishedRoster
-        WHERE EmployeeId = @EmployeeId AND BusinessDate = @BusinessDate AND IsActive = 1
-      `);
-    const previous = existing.recordset[0];
-    if (previous) {
-      await pool.request().input("Id", sql.BigInt, previous.PublishedRosterId).query(
-        `UPDATE [roster].PublishedRoster SET IsActive = 0 WHERE PublishedRosterId = @Id`,
+  const transaction = new sql.Transaction(pool);
+  await transaction.begin();
+  try {
+    const existingRequest = new sql.Request(transaction).input("BusinessDate", sql.Date, requirement.BusinessDate);
+    const employeeIdParams = assignments.map((a, i) => {
+      existingRequest.input(`EmployeeId${i}`, sql.UniqueIdentifier, a.employeeId);
+      return `@EmployeeId${i}`;
+    });
+    const existing = await existingRequest.query<{ EmployeeId: string; PublishedRosterId: number; Version: number }>(`
+      SELECT EmployeeId, PublishedRosterId, Version FROM [roster].PublishedRoster
+      WHERE BusinessDate = @BusinessDate AND IsActive = 1 AND EmployeeId IN (${employeeIdParams.join(", ")})
+    `);
+    const previousByEmployee = new Map(existing.recordset.map((r) => [r.EmployeeId, r]));
+
+    if (existing.recordset.length > 0) {
+      const deactivateRequest = new sql.Request(transaction);
+      const idParams = existing.recordset.map((r, i) => {
+        deactivateRequest.input(`Id${i}`, sql.BigInt, r.PublishedRosterId);
+        return `@Id${i}`;
+      });
+      await deactivateRequest.query(
+        `UPDATE [roster].PublishedRoster SET IsActive = 0 WHERE PublishedRosterId IN (${idParams.join(", ")})`,
       );
     }
-    await pool
-      .request()
-      .input("EmployeeId", sql.UniqueIdentifier, assignment.employeeId)
+
+    const insertRequest = new sql.Request(transaction)
       .input("BusinessDate", sql.Date, requirement.BusinessDate)
       .input("ShiftId", sql.Int, requirement.ShiftId)
-      .input("Version", sql.Int, (previous?.Version ?? 0) + 1)
       .input("RequirementId", sql.BigInt, requirementId)
-      .input("PublishedByUserId", sql.UniqueIdentifier, publishedByUserId)
-      .query(`
-        INSERT INTO [roster].PublishedRoster (EmployeeId, BusinessDate, ShiftId, Version, RosterRequirementId, PublishedByUserId)
-        VALUES (@EmployeeId, @BusinessDate, @ShiftId, @Version, @RequirementId, @PublishedByUserId)
-      `);
+      .input("PublishedByUserId", sql.UniqueIdentifier, publishedByUserId);
+    const valueRows = assignments.map((a, i) => {
+      const version = (previousByEmployee.get(a.employeeId)?.Version ?? 0) + 1;
+      insertRequest.input(`EmployeeId${i}`, sql.UniqueIdentifier, a.employeeId);
+      insertRequest.input(`Version${i}`, sql.Int, version);
+      return `(@EmployeeId${i}, @BusinessDate, @ShiftId, @Version${i}, @RequirementId, @PublishedByUserId)`;
+    });
+    await insertRequest.query(`
+      INSERT INTO [roster].PublishedRoster (EmployeeId, BusinessDate, ShiftId, Version, RosterRequirementId, PublishedByUserId)
+      VALUES ${valueRows.join(", ")}
+    `);
+
+    await transaction.commit();
+    return assignments.length;
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
   }
-  return assignments.length;
 }
 
 export interface PublishedRosterRow {

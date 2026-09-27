@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const listScheduleAndSessionDays = vi.fn();
-const listSessionsForRange = vi.fn();
+const listSessionsForKeys = vi.fn();
 const createSession = vi.fn(async () => 1);
 const getSession = vi.fn();
 const updateSession = vi.fn(async () => undefined);
@@ -9,7 +9,7 @@ const deleteSession = vi.fn(async () => undefined);
 
 vi.mock("../src/modules/attendance/attendance.repository.js", () => ({
   listScheduleAndSessionDays,
-  listSessionsForRange,
+  listSessionsForKeys,
   createSession,
   getSession,
   updateSession,
@@ -64,7 +64,7 @@ function session(overrides: Partial<{ attendanceSessionId: number; employeeId: s
 
 beforeEach(() => {
   listScheduleAndSessionDays.mockReset();
-  listSessionsForRange.mockReset();
+  listSessionsForKeys.mockReset();
   createSession.mockClear();
   getSession.mockReset();
   updateSession.mockClear();
@@ -75,7 +75,7 @@ beforeEach(() => {
 describe("listDailySummaries", () => {
   it("computes gross/net hours, variance and late minutes for a day shift arriving past grace", async () => {
     listScheduleAndSessionDays.mockResolvedValue(paginated([DAY_SHIFT_KEY]));
-    listSessionsForRange.mockResolvedValue([
+    listSessionsForKeys.mockResolvedValue([
       session({ sessionStart: "2026-09-25T09:10:00.000Z", sessionEnd: "2026-09-25T18:00:00.000Z", breakMinutes: 30 }),
     ]);
 
@@ -95,7 +95,7 @@ describe("listDailySummaries", () => {
 
   it("keeps an overnight shift's login and scheduled window on the same business date without splitting at midnight", async () => {
     listScheduleAndSessionDays.mockResolvedValue(paginated([OVERNIGHT_KEY]));
-    listSessionsForRange.mockResolvedValue([session({ sessionStart: "2026-09-25T17:00:00.000Z", sessionEnd: "2026-09-26T02:00:00.000Z" })]);
+    listSessionsForKeys.mockResolvedValue([session({ sessionStart: "2026-09-25T17:00:00.000Z", sessionEnd: "2026-09-26T02:00:00.000Z" })]);
 
     const result = await listDailySummaries({ from: "2026-09-25", to: "2026-09-25", page: 1, pageSize: 50 });
     const summary = result.items[0]!;
@@ -112,7 +112,7 @@ describe("listDailySummaries", () => {
 
   it("marks a scheduled day with no sessions as ABSENT, without fabricating hours", async () => {
     listScheduleAndSessionDays.mockResolvedValue(paginated([DAY_SHIFT_KEY]));
-    listSessionsForRange.mockResolvedValue([]);
+    listSessionsForKeys.mockResolvedValue([]);
 
     const result = await listDailySummaries({ from: "2026-09-25", to: "2026-09-25", page: 1, pageSize: 50 });
     const summary = result.items[0]!;
@@ -127,7 +127,7 @@ describe("listDailySummaries", () => {
 
   it("marks a weekly-off day with no sessions as ON_WEEKLY_OFF with zero scheduled hours", async () => {
     listScheduleAndSessionDays.mockResolvedValue(paginated([{ ...DAY_SHIFT_KEY, shiftId: null, shiftCode: null, startTime: null, endTime: null, isOvernight: null, isWeeklyOff: true }]));
-    listSessionsForRange.mockResolvedValue([]);
+    listSessionsForKeys.mockResolvedValue([]);
 
     const result = await listDailySummaries({ from: "2026-09-25", to: "2026-09-25", page: 1, pageSize: 50 });
     const summary = result.items[0]!;
@@ -141,7 +141,7 @@ describe("listDailySummaries", () => {
     listScheduleAndSessionDays.mockResolvedValue(
       paginated([{ ...DAY_SHIFT_KEY, shiftId: null, shiftCode: null, startTime: null, endTime: null, isOvernight: null, isWeeklyOff: false }]),
     );
-    listSessionsForRange.mockResolvedValue([session({})]);
+    listSessionsForKeys.mockResolvedValue([session({})]);
 
     const result = await listDailySummaries({ from: "2026-09-25", to: "2026-09-25", page: 1, pageSize: 50 });
     const summary = result.items[0]!;
@@ -154,7 +154,7 @@ describe("listDailySummaries", () => {
 
   it("flags DOUBLE_SHIFT_EXCEPTION when the gap between two sessions is under the configured minimum", async () => {
     listScheduleAndSessionDays.mockResolvedValue(paginated([DAY_SHIFT_KEY]));
-    listSessionsForRange.mockResolvedValue([
+    listSessionsForKeys.mockResolvedValue([
       session({ attendanceSessionId: 1, sessionStart: "2026-09-25T09:00:00.000Z", sessionEnd: "2026-09-25T13:00:00.000Z" }),
       session({ attendanceSessionId: 2, sessionStart: "2026-09-25T15:00:00.000Z", sessionEnd: "2026-09-25T18:00:00.000Z" }), // 2h gap, under the 5h minimum
     ]);
@@ -165,7 +165,7 @@ describe("listDailySummaries", () => {
 
   it("does not flag a double shift when the gap meets the configured minimum", async () => {
     listScheduleAndSessionDays.mockResolvedValue(paginated([DAY_SHIFT_KEY]));
-    listSessionsForRange.mockResolvedValue([
+    listSessionsForKeys.mockResolvedValue([
       session({ attendanceSessionId: 1, sessionStart: "2026-09-25T09:00:00.000Z", sessionEnd: "2026-09-25T11:00:00.000Z" }),
       session({ attendanceSessionId: 2, sessionStart: "2026-09-25T16:00:00.000Z", sessionEnd: "2026-09-25T18:00:00.000Z" }), // 5h gap, exactly the minimum
     ]);
@@ -176,7 +176,7 @@ describe("listDailySummaries", () => {
 
   it("treats a still-open session (no logout yet) as PRESENT without inventing an end time", async () => {
     listScheduleAndSessionDays.mockResolvedValue(paginated([DAY_SHIFT_KEY]));
-    listSessionsForRange.mockResolvedValue([session({ sessionEnd: null })]);
+    listSessionsForKeys.mockResolvedValue([session({ sessionEnd: null })]);
 
     const result = await listDailySummaries({ from: "2026-09-25", to: "2026-09-25", page: 1, pageSize: 50 });
     const summary = result.items[0]!;

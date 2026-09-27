@@ -112,6 +112,45 @@ export async function deleteSession(id: number): Promise<void> {
   await pool.request().input("Id", sql.BigInt, id).query(`DELETE FROM [attendance].AttendanceSession WHERE AttendanceSessionId = @Id`);
 }
 
+/**
+ * Sessions for an exact set of (employeeId, businessDate) pairs - used by
+ * listDailySummaries (attendance.service.ts) to fetch only the current page's
+ * keys, instead of listSessionsForRange's full from/to span discarded down to
+ * one page in memory. Callers own keeping the list to a bounded size (it's
+ * always exactly one already-paginated page in practice).
+ */
+export async function listSessionsForKeys(
+  keys: { employeeId: string; businessDate: string }[],
+): Promise<AttendanceSessionRow[]> {
+  if (keys.length === 0) return [];
+
+  const pool = await getPool();
+  const request = pool.request();
+  const valueRows = keys.map((key, i) => {
+    request.input(`EmployeeId${i}`, sql.UniqueIdentifier, key.employeeId);
+    request.input(`BusinessDate${i}`, sql.Date, key.businessDate);
+    return `(@EmployeeId${i}, @BusinessDate${i})`;
+  });
+
+  const result = await request.query<{
+    AttendanceSessionId: number;
+    EmployeeId: string;
+    BusinessDate: string;
+    SessionStart: Date;
+    SessionEnd: Date | null;
+    BreakMinutes: number;
+    Source: string;
+  }>(`
+    SELECT s.AttendanceSessionId, s.EmployeeId, CONVERT(VARCHAR(10), s.BusinessDate, 23) AS BusinessDate,
+           s.SessionStart, s.SessionEnd, s.BreakMinutes, s.Source
+    FROM [attendance].AttendanceSession s
+    JOIN (VALUES ${valueRows.join(", ")}) AS k(EmployeeId, BusinessDate)
+      ON s.EmployeeId = k.EmployeeId AND s.BusinessDate = k.BusinessDate
+    ORDER BY s.EmployeeId, s.BusinessDate, s.SessionStart
+  `);
+  return result.recordset.map(mapSessionRow);
+}
+
 export async function listSessionsForRange(employeeId: string | undefined, from: string, to: string): Promise<AttendanceSessionRow[]> {
   const pool = await getPool();
   const result = await pool

@@ -25,13 +25,16 @@ BEGIN
         -- resolveBusinessDate) and stored, not recomputed with a naive CAST(SessionStart AS DATE).
         BusinessDate           DATE             NOT NULL,
         SessionStart             DATETIME2(3)     NOT NULL,
-        SessionEnd                 DATETIME2(3)     NULL CONSTRAINT CK_AttendanceSession_EndAfterStart CHECK (SessionEnd IS NULL OR SessionEnd > SessionStart),
+        SessionEnd                 DATETIME2(3)     NULL,
         BreakMinutes                  INT         NOT NULL CONSTRAINT DF_AttendanceSession_BreakMinutes DEFAULT (0) CONSTRAINT CK_AttendanceSession_BreakMinutes CHECK (BreakMinutes >= 0),
         Source                          VARCHAR(20) NOT NULL CONSTRAINT DF_AttendanceSession_Source DEFAULT ('MANUAL')
                                           CONSTRAINT CK_AttendanceSession_Source CHECK (Source IN ('MANUAL', 'IMPORT', 'ADJUSTMENT')),
         RecordedByUserId                  UNIQUEIDENTIFIER NOT NULL CONSTRAINT FK_AttendanceSession_RecordedBy REFERENCES security.[User](UserId),
         CreatedAt                          DATETIME2(3) NOT NULL CONSTRAINT DF_AttendanceSession_CreatedAt DEFAULT (SYSUTCDATETIME()),
-        ModifiedAt                          DATETIME2(3) NOT NULL CONSTRAINT DF_AttendanceSession_ModifiedAt DEFAULT (SYSUTCDATETIME())
+        ModifiedAt                          DATETIME2(3) NOT NULL CONSTRAINT DF_AttendanceSession_ModifiedAt DEFAULT (SYSUTCDATETIME()),
+        -- A column-level CHECK cannot reference another column in SQL Server (error 8141) -
+        -- this must be a table-level constraint.
+        CONSTRAINT CK_AttendanceSession_EndAfterStart CHECK (SessionEnd IS NULL OR SessionEnd > SessionStart)
     );
     CREATE INDEX IX_AttendanceSession_EmployeeDate ON [attendance].AttendanceSession(EmployeeId, BusinessDate);
 END

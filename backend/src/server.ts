@@ -46,6 +46,10 @@ async function main(): Promise<void> {
   const server = app.listen(env.PORT, () => {
     logger.info({ port: env.PORT, env: env.NODE_ENV }, "Universal MyWFM backend listening");
   });
+  // headersTimeout must exceed keepAliveTimeout (Node's own requirement) to avoid
+  // a race that can drop legitimate keep-alive connections under load.
+  server.keepAliveTimeout = 65_000;
+  server.headersTimeout = 66_000;
 
   await bootstrapDatabaseDependentState();
   registerBackupJobHandler();
