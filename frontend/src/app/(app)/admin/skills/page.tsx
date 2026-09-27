@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface SkillRow {
@@ -68,27 +69,9 @@ export default function SkillsPage() {
 
       <Card>
         <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3 p-4">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Code</span>
-            <input
-              type="text"
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="w-32 rounded-md border border-line-strong bg-surface px-3 py-1.5 text-sm text-ink outline-none focus:border-accent"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Name</span>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-64 rounded-md border border-line-strong bg-surface px-3 py-1.5 text-sm text-ink outline-none focus:border-accent"
-            />
-          </label>
-          <Button type="submit" disabled={submitting}>
+          <Input label="Code" type="text" required className="w-32" value={code} onChange={(e) => setCode(e.target.value)} />
+          <Input label="Name" type="text" required className="w-64" value={name} onChange={(e) => setName(e.target.value)} />
+          <Button type="submit" loading={submitting}>
             Add skill
           </Button>
           {formError && <span className="text-sm text-critical">{formError}</span>}

@@ -7,6 +7,8 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface QueueIntervalCall {
@@ -200,58 +202,47 @@ export default function CallsPage() {
             Agent Intervals
           </button>
         </div>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">From</span>
-          <input
-            type="date"
-            value={range.from}
-            onChange={(e) => {
-              setPage(1);
-              setRange((r) => ({ ...r, from: e.target.value }));
-            }}
-            className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">To</span>
-          <input
-            type="date"
-            value={range.to}
-            onChange={(e) => {
-              setPage(1);
-              setRange((r) => ({ ...r, to: e.target.value }));
-            }}
-            className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Queue (optional)</span>
-          <select
-            value={queueId}
-            onChange={(e) => {
-              setPage(1);
-              setQueueId(e.target.value);
-            }}
-            className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-          >
-            <option value="">All queues</option>
-            {queues?.map((q) => (
-              <option key={q.id} value={q.id}>
-                {q.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Input
+          label="From"
+          type="date"
+          value={range.from}
+          onChange={(e) => {
+            setPage(1);
+            setRange((r) => ({ ...r, from: e.target.value }));
+          }}
+        />
+        <Input
+          label="To"
+          type="date"
+          value={range.to}
+          onChange={(e) => {
+            setPage(1);
+            setRange((r) => ({ ...r, to: e.target.value }));
+          }}
+        />
+        <Select
+          label="Queue (optional)"
+          value={queueId}
+          onChange={(e) => {
+            setPage(1);
+            setQueueId(e.target.value);
+          }}
+        >
+          <option value="">All queues</option>
+          {queues?.map((q) => (
+            <option key={q.id} value={q.id}>
+              {q.name}
+            </option>
+          ))}
+        </Select>
         {tab === "agent" && (
           <>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Agent Employee Code (optional)</span>
-              <input
-                value={agentCode}
-                onChange={(e) => setAgentCode(e.target.value)}
-                className="w-48 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
+            <Input
+              label="Agent Employee Code (optional)"
+              className="w-48"
+              value={agentCode}
+              onChange={(e) => setAgentCode(e.target.value)}
+            />
             <Button variant="secondary" onClick={applyAgentFilter}>
               Apply filter
             </Button>

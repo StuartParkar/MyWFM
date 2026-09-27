@@ -1,5 +1,7 @@
 "use client";
 
+import { Input } from "@/components/ui/Input";
+
 export interface DateRange {
   from: string;
   to: string;
@@ -29,19 +31,9 @@ export function PeriodRangePicker({ label, range, onChange }: { label: string; r
     <div className="flex flex-col gap-1">
       <span className="text-xs font-medium text-ink-muted">{label}</span>
       <div className="flex items-center gap-2">
-        <input
-          type="date"
-          value={range.from}
-          onChange={(e) => onChange({ ...range, from: e.target.value })}
-          className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-        />
+        <Input type="date" value={range.from} onChange={(e) => onChange({ ...range, from: e.target.value })} />
         <span className="text-ink-faint">→</span>
-        <input
-          type="date"
-          value={range.to}
-          onChange={(e) => onChange({ ...range, to: e.target.value })}
-          className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-        />
+        <Input type="date" value={range.to} onChange={(e) => onChange({ ...range, to: e.target.value })} />
       </div>
     </div>
   );

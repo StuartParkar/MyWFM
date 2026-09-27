@@ -7,6 +7,8 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface RequirementRow {
@@ -114,41 +116,41 @@ export default function RosterRequirementsPage() {
       <Card>
         <CardBody>
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Business Date</span>
-              <input type="date" required value={form.businessDate} onChange={(e) => setForm({ ...form, businessDate: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Department</span>
-              <select value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">—</option>
-                {lookups?.departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Process</span>
-              <select value={form.processId} onChange={(e) => setForm({ ...form, processId: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">—</option>
-                {lookups?.processes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Shift</span>
-              <select value={form.shiftId} onChange={(e) => setForm({ ...form, shiftId: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">—</option>
-                {lookups?.shifts.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Required HC</span>
-              <input type="number" min={0} required value={form.requiredHc} onChange={(e) => setForm({ ...form, requiredHc: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="col-span-2 flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Notes</span>
-              <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
+            <Input
+              label="Business Date"
+              type="date"
+              required
+              value={form.businessDate}
+              onChange={(e) => setForm({ ...form, businessDate: e.target.value })}
+            />
+            <Select label="Department" value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })}>
+              <option value="">—</option>
+              {lookups?.departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </Select>
+            <Select label="Process" value={form.processId} onChange={(e) => setForm({ ...form, processId: e.target.value })}>
+              <option value="">—</option>
+              {lookups?.processes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </Select>
+            <Select label="Shift" value={form.shiftId} onChange={(e) => setForm({ ...form, shiftId: e.target.value })}>
+              <option value="">—</option>
+              {lookups?.shifts.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </Select>
+            <Input
+              label="Required HC"
+              type="number"
+              min={0}
+              required
+              value={form.requiredHc}
+              onChange={(e) => setForm({ ...form, requiredHc: e.target.value })}
+            />
+            <Input
+              label="Notes"
+              className="col-span-2"
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            />
             <div className="col-span-full flex items-center gap-3">
-              <Button type="submit" disabled={submitting}>Submit requirement</Button>
+              <Button type="submit" loading={submitting}>Submit requirement</Button>
               {formError && <span className="text-sm text-critical">{formError}</span>}
             </div>
           </form>

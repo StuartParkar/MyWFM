@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface AttritionSummary {
@@ -151,50 +153,32 @@ export default function AttritionPage() {
       </div>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">From</span>
-          <input type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">To</span>
-          <input type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Department</span>
-          <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All</option>
-            {departments?.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Process</span>
-          <select value={processId} onChange={(e) => setProcessId(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All</option>
-            {processes?.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Location</span>
-          <select value={locationId} onChange={(e) => setLocationId(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All</option>
-            {locations?.map((l) => (
-              <option key={l.id} value={l.id}>{l.name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Designation</span>
-          <select value={designationId} onChange={(e) => setDesignationId(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All</option>
-            {designations?.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-        </label>
+        <Input label="From" type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} />
+        <Input label="To" type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} />
+        <Select label="Department" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+          <option value="">All</option>
+          {departments?.map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </Select>
+        <Select label="Process" value={processId} onChange={(e) => setProcessId(e.target.value)}>
+          <option value="">All</option>
+          {processes?.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </Select>
+        <Select label="Location" value={locationId} onChange={(e) => setLocationId(e.target.value)}>
+          <option value="">All</option>
+          {locations?.map((l) => (
+            <option key={l.id} value={l.id}>{l.name}</option>
+          ))}
+        </Select>
+        <Select label="Designation" value={designationId} onChange={(e) => setDesignationId(e.target.value)}>
+          <option value="">All</option>
+          {designations?.map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </Select>
       </Card>
 
       {summaryLoading && <LoadingState label="Loading summary" />}

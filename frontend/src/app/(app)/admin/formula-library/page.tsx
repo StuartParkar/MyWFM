@@ -7,6 +7,7 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface FormulaDefinition {
@@ -100,13 +101,12 @@ export default function FormulaLibraryPage() {
           title="Calculation Ledger"
           subtitle="Every computed value, its formula version, and when it was computed - section 23's Data Lineage reads this table."
           action={
-            <select
+            <Select
               value={formulaCodeFilter}
               onChange={(e) => {
                 setPage(1);
                 setFormulaCodeFilter(e.target.value);
               }}
-              className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
             >
               <option value="">All formulas</option>
               {formulas?.map((f) => (
@@ -114,7 +114,7 @@ export default function FormulaLibraryPage() {
                   {f.name}
                 </option>
               ))}
-            </select>
+            </Select>
           }
         />
         <CardBody className="flex flex-col gap-3">

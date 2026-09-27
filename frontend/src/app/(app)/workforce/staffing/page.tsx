@@ -7,6 +7,8 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface CoverageRow {
@@ -125,28 +127,16 @@ export default function StaffingPage() {
       </div>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">From</span>
-          <input type="date" value={range.from} onChange={(e) => { setPage(1); setRange((r) => ({ ...r, from: e.target.value })); }} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">To</span>
-          <input type="date" value={range.to} onChange={(e) => { setPage(1); setRange((r) => ({ ...r, to: e.target.value })); }} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Department</span>
-          <select value={departmentId} onChange={(e) => { setPage(1); setDepartmentId(e.target.value); }} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All</option>
-            {lookups?.departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Process</span>
-          <select value={processId} onChange={(e) => { setPage(1); setProcessId(e.target.value); }} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All</option>
-            {lookups?.processes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </label>
+        <Input label="From" type="date" value={range.from} onChange={(e) => { setPage(1); setRange((r) => ({ ...r, from: e.target.value })); }} />
+        <Input label="To" type="date" value={range.to} onChange={(e) => { setPage(1); setRange((r) => ({ ...r, to: e.target.value })); }} />
+        <Select label="Department" value={departmentId} onChange={(e) => { setPage(1); setDepartmentId(e.target.value); }}>
+          <option value="">All</option>
+          {lookups?.departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </Select>
+        <Select label="Process" value={processId} onChange={(e) => { setPage(1); setProcessId(e.target.value); }}>
+          <option value="">All</option>
+          {lookups?.processes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </Select>
       </Card>
 
       {loading && <LoadingState label="Loading staffing coverage" />}

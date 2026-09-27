@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface ShiftImpact {
@@ -180,38 +182,29 @@ export default function RosterChangesPage() {
         <CardHeader title="Preview a change" />
         <CardBody className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Employee Code</span>
-              <input
-                value={form.employeeCode}
-                onChange={(e) => updateForm({ employeeCode: e.target.value })}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Business Date</span>
-              <input
-                type="date"
-                value={form.businessDate}
-                onChange={(e) => updateForm({ businessDate: e.target.value })}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">New Shift</span>
-              <select
-                value={form.newShiftId}
-                onChange={(e) => updateForm({ newShiftId: e.target.value })}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              >
-                <option value="">—</option>
-                {shifts?.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.code}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Input
+              label="Employee Code"
+              value={form.employeeCode}
+              onChange={(e) => updateForm({ employeeCode: e.target.value })}
+            />
+            <Input
+              label="Business Date"
+              type="date"
+              value={form.businessDate}
+              onChange={(e) => updateForm({ businessDate: e.target.value })}
+            />
+            <Select
+              label="New Shift"
+              value={form.newShiftId}
+              onChange={(e) => updateForm({ newShiftId: e.target.value })}
+            >
+              <option value="">—</option>
+              {shifts?.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.code}
+                </option>
+              ))}
+            </Select>
             <div className="flex items-end">
               <Button variant="secondary" disabled={busy} onClick={previewImpact}>
                 Preview impact
@@ -226,14 +219,12 @@ export default function RosterChangesPage() {
                 <ImpactPanel label="New shift" impact={preview.impact.newShift} />
               </div>
               <div className="flex flex-wrap items-end gap-3">
-                <label className="flex flex-1 min-w-48 flex-col gap-1">
-                  <span className="text-xs font-medium text-ink-muted">Reason</span>
-                  <input
-                    value={form.reason}
-                    onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
-                    className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-                  />
-                </label>
+                <Input
+                  label="Reason"
+                  className="min-w-48 flex-1"
+                  value={form.reason}
+                  onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
+                />
                 <Button disabled={busy} onClick={confirmChange}>
                   Confirm change
                 </Button>

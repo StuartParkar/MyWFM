@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface ScenarioRow {
@@ -261,48 +263,21 @@ export default function ScenariosPage() {
         <CardHeader title="Build a scenario" subtitle="Preview before saving - nothing is written until you save." />
         <CardBody className="flex flex-col gap-4">
           <form onSubmit={runPreview} className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Name</span>
-              <input type="text" value={form.scenarioName} onChange={(e) => setForm((f) => ({ ...f, scenarioName: e.target.value }))} className="min-w-[10rem] rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Process</span>
-              <select value={form.processId} onChange={(e) => setForm((f) => ({ ...f, processId: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">All processes</option>
-                {processes?.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Baseline from</span>
-              <input type="date" value={form.baselineFrom} onChange={(e) => setForm((f) => ({ ...f, baselineFrom: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Baseline to</span>
-              <input type="date" value={form.baselineTo} onChange={(e) => setForm((f) => ({ ...f, baselineTo: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Volume change %</span>
-              <input type="number" step="1" value={form.volumeChangePct} onChange={(e) => setForm((f) => ({ ...f, volumeChangePct: e.target.value }))} className="w-24 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">AHT change %</span>
-              <input type="number" step="1" value={form.ahtChangePct} onChange={(e) => setForm((f) => ({ ...f, ahtChangePct: e.target.value }))} className="w-24 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Shrinkage % override</span>
-              <input type="number" step="1" placeholder="Use real" value={form.shrinkagePctOverride} onChange={(e) => setForm((f) => ({ ...f, shrinkagePctOverride: e.target.value }))} className="w-28 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">HC change</span>
-              <input type="number" step="1" value={form.hcChange} onChange={(e) => setForm((f) => ({ ...f, hcChange: e.target.value }))} className="w-24 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Notes</span>
-              <input type="text" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} className="min-w-[10rem] rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <Button type="submit" variant="secondary" disabled={busy}>
+            <Input label="Name" type="text" className="min-w-[10rem]" value={form.scenarioName} onChange={(e) => setForm((f) => ({ ...f, scenarioName: e.target.value }))} />
+            <Select label="Process" value={form.processId} onChange={(e) => setForm((f) => ({ ...f, processId: e.target.value }))}>
+              <option value="">All processes</option>
+              {processes?.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </Select>
+            <Input label="Baseline from" type="date" value={form.baselineFrom} onChange={(e) => setForm((f) => ({ ...f, baselineFrom: e.target.value }))} />
+            <Input label="Baseline to" type="date" value={form.baselineTo} onChange={(e) => setForm((f) => ({ ...f, baselineTo: e.target.value }))} />
+            <Input label="Volume change %" type="number" step="1" className="w-24" value={form.volumeChangePct} onChange={(e) => setForm((f) => ({ ...f, volumeChangePct: e.target.value }))} />
+            <Input label="AHT change %" type="number" step="1" className="w-24" value={form.ahtChangePct} onChange={(e) => setForm((f) => ({ ...f, ahtChangePct: e.target.value }))} />
+            <Input label="Shrinkage % override" type="number" step="1" placeholder="Use real" className="w-28" value={form.shrinkagePctOverride} onChange={(e) => setForm((f) => ({ ...f, shrinkagePctOverride: e.target.value }))} />
+            <Input label="HC change" type="number" step="1" className="w-24" value={form.hcChange} onChange={(e) => setForm((f) => ({ ...f, hcChange: e.target.value }))} />
+            <Input label="Notes" type="text" className="min-w-[10rem]" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
+            <Button type="submit" variant="secondary" loading={busy}>
               {busy ? "Working..." : "Preview"}
             </Button>
             <Button type="button" onClick={saveScenario} disabled={busy || !preview}>

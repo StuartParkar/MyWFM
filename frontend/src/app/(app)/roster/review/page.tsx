@@ -7,6 +7,7 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface RequirementRow {
@@ -84,21 +85,21 @@ function ReviewRow({ requirement, onChanged }: { requirement: RequirementRow; on
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <input
+          <Input
             placeholder="Employee code to assign"
+            className="w-48"
             value={employeeCode}
             onChange={(e) => setEmployeeCode(e.target.value)}
-            className="w-48 rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink"
           />
           <Button variant="secondary" disabled={busy} onClick={addAssignment}>Assign</Button>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <input
+          <Input
             placeholder="Comments (optional)"
+            className="min-w-48 flex-1"
             value={comments}
             onChange={(e) => setComments(e.target.value)}
-            className="flex-1 min-w-48 rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink"
           />
           <Button disabled={busy} onClick={() => decide("APPROVE")}>Approve</Button>
           <Button variant="secondary" disabled={busy} onClick={() => decide("SEND_BACK")}>Send back</Button>

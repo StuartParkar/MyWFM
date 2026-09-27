@@ -7,6 +7,7 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { cn } from "@/lib/cn";
 
@@ -97,21 +98,20 @@ export default function RosterApprovalsPage() {
             full decision history.
           </p>
         </div>
-        <select
+        <Select
           value={status}
           onChange={(e) => {
             setPage(1);
             setStatus(e.target.value);
             setSelectedId(null);
           }}
-          className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
         >
           {STATUS_OPTIONS.map((s) => (
             <option key={s || "all"} value={s}>
               {s || "All statuses"}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface IntervalBucket {
@@ -104,21 +106,15 @@ export default function IntradayControlPage() {
       </div>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Business date</span>
-          <input type="date" value={businessDate} onChange={(e) => setBusinessDate(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Process</span>
-          <select value={processId} onChange={(e) => setProcessId(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All processes</option>
-            {processes?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Input label="Business date" type="date" value={businessDate} onChange={(e) => setBusinessDate(e.target.value)} />
+        <Select label="Process" value={processId} onChange={(e) => setProcessId(e.target.value)}>
+          <option value="">All processes</option>
+          {processes?.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </Select>
       </Card>
 
       {loading && <LoadingState label="Loading intraday control" />}

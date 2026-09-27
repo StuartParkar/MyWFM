@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface ForecastRow {
@@ -104,25 +106,16 @@ export default function ForecastPage() {
       </div>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">From</span>
-          <input type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">To</span>
-          <input type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Queue</span>
-          <select value={queueId} onChange={(e) => setQueueId(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All queues</option>
-            {queues?.map((q) => (
-              <option key={q.id} value={q.id}>
-                {q.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Input label="From" type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} />
+        <Input label="To" type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} />
+        <Select label="Queue" value={queueId} onChange={(e) => setQueueId(e.target.value)}>
+          <option value="">All queues</option>
+          {queues?.map((q) => (
+            <option key={q.id} value={q.id}>
+              {q.name}
+            </option>
+          ))}
+        </Select>
       </Card>
 
       {accuracy && accuracy.daysEvaluated > 0 && (

@@ -7,6 +7,7 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 type ExceptionStatus = "DETECTED" | "ACKNOWLEDGED" | "ACTION_TAKEN" | "RESOLVED";
@@ -123,18 +124,15 @@ export default function ActionsPage() {
       </div>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Category</span>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All categories</option>
-            <option value="STAFFING">Staffing</option>
-            <option value="SERVICE_LEVEL">Service Level</option>
-            <option value="ATTENDANCE">Attendance</option>
-            <option value="DATA_QUALITY">Data Quality</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2 pb-1.5 text-sm text-ink-muted">
-          <input type="checkbox" checked={showResolved} onChange={(e) => setShowResolved(e.target.checked)} />
+        <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option value="">All categories</option>
+          <option value="STAFFING">Staffing</option>
+          <option value="SERVICE_LEVEL">Service Level</option>
+          <option value="ATTENDANCE">Attendance</option>
+          <option value="DATA_QUALITY">Data Quality</option>
+        </Select>
+        <label className="flex items-center gap-2 pb-2 text-sm text-ink-muted">
+          <input type="checkbox" checked={showResolved} onChange={(e) => setShowResolved(e.target.checked)} className="size-4 rounded border-line-strong accent-accent" />
           Show resolved history instead of the open queue
         </label>
       </Card>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { FilterProvider } from "@/lib/filters/FilterContext";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -11,6 +11,7 @@ import { GlobalFilterBar } from "@/components/filters/GlobalFilterBar";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { status } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/login");
@@ -31,7 +32,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-1 flex-col">
           <TopBar />
           <GlobalFilterBar />
-          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+          <main className="flex-1 overflow-y-auto p-6">
+            <div key={pathname} className="animate-content-in">
+              {children}
+            </div>
+          </main>
         </div>
       </div>
     </FilterProvider>

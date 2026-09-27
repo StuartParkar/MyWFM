@@ -1,8 +1,10 @@
 "use client";
 
+import { RotateCcw } from "lucide-react";
 import { DATE_RANGE_PRESETS, type DateRangePreset } from "@mywfm/shared";
 import { useFilters, type LookupOption } from "@/lib/filters/FilterContext";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 
 const PRESET_LABELS: Record<Exclude<DateRangePreset, "CUSTOM">, string> = {
   YESTERDAY: "Yesterday",
@@ -38,22 +40,20 @@ function SelectField({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex flex-col gap-1" title={title}>
-      <span className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">{label}</span>
-      <select
-        className="min-w-32 rounded-md border border-line-strong bg-surface px-2.5 py-1.5 text-sm text-ink disabled:cursor-not-allowed disabled:bg-canvas disabled:text-ink-faint"
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        <option value="ALL">All</option>
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
+    <Select
+      label={label}
+      title={title}
+      value={value}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      <option value="ALL">All</option>
+      {options.map((option) => (
+        <option key={option.id} value={option.id}>
+          {option.label}
+        </option>
+      ))}
+    </Select>
   );
 }
 
@@ -76,21 +76,18 @@ export function GlobalFilterBar() {
 
   return (
     <div className="flex flex-wrap items-end gap-4 border-b border-line bg-surface px-6 py-3">
-      <label className="flex flex-col gap-1">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">Date Range</span>
-        <select
-          className="rounded-md border border-line-strong bg-surface px-2.5 py-1.5 text-sm text-ink"
-          value={filters.dateRange.preset}
-          onChange={(e) => setDateRangePreset(e.target.value as DateRangePreset)}
-        >
-          {SELECTABLE_PRESETS.map((preset) => (
-            <option key={preset} value={preset}>
-              {PRESET_LABELS[preset]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <span className="pb-1.5 text-xs text-ink-faint">
+      <Select
+        label="Date Range"
+        value={filters.dateRange.preset}
+        onChange={(e) => setDateRangePreset(e.target.value as DateRangePreset)}
+      >
+        {SELECTABLE_PRESETS.map((preset) => (
+          <option key={preset} value={preset}>
+            {PRESET_LABELS[preset]}
+          </option>
+        ))}
+      </Select>
+      <span className="pb-2 text-xs text-ink-faint tabular-nums">
         {filters.dateRange.startDate === filters.dateRange.endDate
           ? filters.dateRange.startDate
           : `${filters.dateRange.startDate} → ${filters.dateRange.endDate}`}
@@ -116,7 +113,7 @@ export function GlobalFilterBar() {
       <SelectField label="Process" value={filters.process} options={processOptions} onChange={setProcess} />
       <SelectField label="Designation" value={filters.designation} options={designationOptions} onChange={setDesignation} />
 
-      <Button variant="ghost" className="ml-auto" onClick={reset}>
+      <Button variant="ghost" size="sm" icon={RotateCcw} className="ml-auto" onClick={reset}>
         Reset filters
       </Button>
     </div>

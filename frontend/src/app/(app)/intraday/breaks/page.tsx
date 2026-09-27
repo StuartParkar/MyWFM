@@ -8,6 +8,8 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface CoverageRow {
@@ -202,48 +204,36 @@ export default function BreakManagementPage() {
       </div>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Business date</span>
-          <input type="date" value={businessDate} onChange={(e) => setBusinessDate(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Process</span>
-          <select value={processId} onChange={(e) => setProcessId(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All processes</option>
-            {processes?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Input label="Business date" type="date" value={businessDate} onChange={(e) => setBusinessDate(e.target.value)} />
+        <Select label="Process" value={processId} onChange={(e) => setProcessId(e.target.value)}>
+          <option value="">All processes</option>
+          {processes?.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </Select>
       </Card>
 
       <Card>
         <CardHeader title="Start a break" subtitle="Recorded against a scheduled employee for this business date - visible immediately in the coverage table below." />
         <CardBody>
           <form onSubmit={submitStartBreak} className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Employee</span>
-              <select value={formEmployeeId} onChange={(e) => setFormEmployeeId(e.target.value)} className="min-w-[14rem] rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">Select an employee</option>
-                {scheduledEmployees?.map((emp) => (
-                  <option key={emp.employeeId} value={emp.employeeId}>
-                    {emp.employeeName} ({emp.employeeCode})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Break start</span>
-              <input
-                type="datetime-local"
-                value={formBreakStart}
-                onChange={(e) => setFormBreakStart(e.target.value)}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <Button type="submit" disabled={formBusy}>
+            <Select label="Employee" className="min-w-[14rem]" value={formEmployeeId} onChange={(e) => setFormEmployeeId(e.target.value)}>
+              <option value="">Select an employee</option>
+              {scheduledEmployees?.map((emp) => (
+                <option key={emp.employeeId} value={emp.employeeId}>
+                  {emp.employeeName} ({emp.employeeCode})
+                </option>
+              ))}
+            </Select>
+            <Input
+              label="Break start"
+              type="datetime-local"
+              value={formBreakStart}
+              onChange={(e) => setFormBreakStart(e.target.value)}
+            />
+            <Button type="submit" loading={formBusy}>
               {formBusy ? "Starting..." : "Start break"}
             </Button>
           </form>

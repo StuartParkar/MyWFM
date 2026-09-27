@@ -11,6 +11,7 @@
   --color-canvas: #f7f8fa;
   --color-surface: #ffffff;
   --color-surface-raised: #ffffff;
+  --color-surface-sunken: #f0f2f5;
   --color-line: #e4e7ec;
   --color-line-strong: #d0d5dd;
 
@@ -33,6 +34,17 @@
 
   --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
   --shadow-raised: 0 4px 12px rgba(16, 24, 40, 0.08);
+  /* Elevation scale (additive - shadow-card/raised above are kept as-is so
+     nothing already referencing them changes). */
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.07), 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-lg: 0 12px 24px -6px rgba(16, 24, 40, 0.12), 0 4px 8px -2px rgba(16, 24, 40, 0.06);
+
+  /* Motion - purposeful and quick, not decorative. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -40,6 +52,7 @@
     --color-canvas: #0b0f19;
     --color-surface: #111726;
     --color-surface-raised: #161d2e;
+    --color-surface-sunken: #080b12;
     --color-line: #232b3d;
     --color-line-strong: #2e3750;
 
@@ -62,6 +75,10 @@
 
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
     --shadow-raised: 0 8px 20px rgba(0, 0, 0, 0.45);
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 10px -2px rgba(0, 0, 0, 0.45), 0 2px 6px -2px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 16px 32px -8px rgba(0, 0, 0, 0.55), 0 6px 12px -3px rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -69,6 +86,7 @@
   --color-canvas: var(--color-canvas);
   --color-surface: var(--color-surface);
   --color-surface-raised: var(--color-surface-raised);
+  --color-surface-sunken: var(--color-surface-sunken);
   --color-line: var(--color-line);
   --color-line-strong: var(--color-line-strong);
 
@@ -90,6 +108,7 @@
   --color-info-soft: var(--color-info-soft);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
 body {
@@ -101,7 +120,56 @@ body {
   border-color: var(--color-line);
 }
 
-/* Tabular figures for KPI numbers, so digits don't jitter in width as they change. */
+/* Tabular figures for KPI numbers, so digits don't jitter in width as they
+   change. Also carries the mono "instrument panel" treatment - every KPI
+   figure in the app already wears this class, so this one rule is what
+   actually propagates JetBrains Mono to all of them. */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* Purposeful, quick entrance for page content - not a decorative flourish,
+   just enough to make navigation feel considered rather than instant/jarring. */
+@keyframes content-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-content-in {
+  animation: content-in var(--duration-base) var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-content-in {
+    animation: none;
+  }
+}
+
+/* Loading-skeleton shimmer, replacing a flat opacity pulse with a moving
+   highlight - reads as "actively fetching" rather than just "dimmed". */
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.animate-shimmer {
+  background-image: linear-gradient(90deg, var(--color-surface-sunken) 25%, var(--color-line) 50%, var(--color-surface-sunken) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer {
+    animation: none;
+    background: var(--color-surface-sunken);
+  }
 }

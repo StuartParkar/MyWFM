@@ -2,6 +2,21 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
+import {
+  Activity,
+  CalendarCheck,
+  Gauge,
+  Phone,
+  PhoneMissed,
+  Scale,
+  ShieldCheck,
+  Timer,
+  TrendingDown,
+  UserCheck,
+  Users,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
 import type { ApiResponse, PaginatedResult } from "@mywfm/shared";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useFilters } from "@/lib/filters/FilterContext";
@@ -43,27 +58,32 @@ interface LedgerRow {
 
 type KpiKey = keyof ControlTowerSummary;
 
-const KPI_CONFIG: { key: KpiKey; label: string; format: (v: number) => string; group: "A" | "B" }[] = [
-  { key: "plannedHC", label: "Planned HC", format: (v) => String(v), group: "A" },
-  { key: "presentHC", label: "Present HC", format: (v) => String(v), group: "B" },
-  { key: "requiredHC", label: "Required HC", format: (v) => String(v), group: "A" },
-  { key: "staffingGap", label: "Staffing Gap", format: (v) => (v >= 0 ? `+${v}` : String(v)), group: "A" },
-  { key: "coveragePct", label: "Coverage", format: (v) => `${v}%`, group: "A" },
-  { key: "calls", label: "Calls", format: (v) => String(v), group: "A" },
-  { key: "ahtSeconds", label: "AHT", format: (v) => `${v}s`, group: "A" },
-  { key: "serviceLevelPct", label: "Service Level", format: (v) => `${v}%`, group: "A" },
-  { key: "abandonRatePct", label: "Abandon Rate", format: (v) => `${v}%`, group: "A" },
-  { key: "occupancyPct", label: "Occupancy", format: (v) => `${v}%`, group: "A" },
-  { key: "shrinkagePct", label: "Shrinkage", format: (v) => `${v}%`, group: "B" },
-  { key: "attendancePct", label: "Attendance", format: (v) => `${v}%`, group: "B" },
+const KPI_CONFIG: { key: KpiKey; label: string; format: (v: number) => string; icon: LucideIcon; group: "A" | "B" }[] = [
+  { key: "plannedHC", label: "Planned HC", format: (v) => String(v), icon: Users, group: "A" },
+  { key: "presentHC", label: "Present HC", format: (v) => String(v), icon: UserCheck, group: "B" },
+  { key: "requiredHC", label: "Required HC", format: (v) => String(v), icon: UsersRound, group: "A" },
+  { key: "staffingGap", label: "Staffing Gap", format: (v) => (v >= 0 ? `+${v}` : String(v)), icon: Scale, group: "A" },
+  { key: "coveragePct", label: "Coverage", format: (v) => `${v}%`, icon: ShieldCheck, group: "A" },
+  { key: "calls", label: "Calls", format: (v) => String(v), icon: Phone, group: "A" },
+  { key: "ahtSeconds", label: "AHT", format: (v) => `${v}s`, icon: Timer, group: "A" },
+  { key: "serviceLevelPct", label: "Service Level", format: (v) => `${v}%`, icon: Gauge, group: "A" },
+  { key: "abandonRatePct", label: "Abandon Rate", format: (v) => `${v}%`, icon: PhoneMissed, group: "A" },
+  { key: "occupancyPct", label: "Occupancy", format: (v) => `${v}%`, icon: Activity, group: "A" },
+  { key: "shrinkagePct", label: "Shrinkage", format: (v) => `${v}%`, icon: TrendingDown, group: "B" },
+  { key: "attendancePct", label: "Attendance", format: (v) => `${v}%`, icon: CalendarCheck, group: "B" },
 ];
 
-function KpiTile({ label, kpi, format, onExplain }: { label: string; kpi: Kpi; format: (v: number) => string; onExplain?: () => void }) {
+function KpiTile({ label, kpi, format, icon: Icon, onExplain }: { label: string; kpi: Kpi; format: (v: number) => string; icon: LucideIcon; onExplain?: () => void }) {
   const explainable = kpi.formulaCode !== null && kpi.value !== null;
   return (
-    <Card>
+    <Card interactive className="group">
       <CardBody>
-        <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">{label}</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">{label}</p>
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent transition-transform duration-[var(--duration-base)] ease-[var(--ease-standard)] group-hover:scale-110">
+            <Icon size={14} />
+          </span>
+        </div>
         <div className="mt-2 flex items-baseline justify-between gap-2">
           <span className="text-2xl font-semibold text-ink tabular-nums">{kpi.value == null ? "—" : format(kpi.value)}</span>
         </div>
@@ -132,8 +152,8 @@ export default function ControlTowerPage() {
       {!loading && error && <ErrorState message={error} onRetry={reload} />}
       {!loading && !error && summary && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {KPI_CONFIG.map(({ key, label, format }) => (
-            <KpiTile key={key} label={label} kpi={summary[key]} format={format} onExplain={() => setExplainCode(summary[key].formulaCode)} />
+          {KPI_CONFIG.map(({ key, label, format, icon }) => (
+            <KpiTile key={key} label={label} kpi={summary[key]} format={format} icon={icon} onExplain={() => setExplainCode(summary[key].formulaCode)} />
           ))}
         </div>
       )}

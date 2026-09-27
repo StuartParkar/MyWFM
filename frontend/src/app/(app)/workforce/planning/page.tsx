@@ -7,6 +7,8 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface PlanRow {
@@ -148,63 +150,36 @@ export default function WorkforcePlanningPage() {
         <CardHeader title="Submit a plan" />
         <CardBody>
           <form onSubmit={submitPlan} className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Month</span>
-              <input type="month" value={form.businessMonth} onChange={(e) => setForm((f) => ({ ...f, businessMonth: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Department</span>
-              <select value={form.departmentId} onChange={(e) => setForm((f) => ({ ...f, departmentId: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">Not broken down</option>
-                {departments?.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Process</span>
-              <select value={form.processId} onChange={(e) => setForm((f) => ({ ...f, processId: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">Not broken down</option>
-                {processes?.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Location</span>
-              <select value={form.locationId} onChange={(e) => setForm((f) => ({ ...f, locationId: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">Not broken down</option>
-                {locations?.map((l) => (
-                  <option key={l.id} value={l.id}>{l.name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Designation</span>
-              <select value={form.designationId} onChange={(e) => setForm((f) => ({ ...f, designationId: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">Not broken down</option>
-                {designations?.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Required HC</span>
-              <input type="number" min="0" value={form.requiredHC} onChange={(e) => setForm((f) => ({ ...f, requiredHC: e.target.value }))} className="w-24 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Planned hires</span>
-              <input type="number" min="0" value={form.plannedHiresHC} onChange={(e) => setForm((f) => ({ ...f, plannedHiresHC: e.target.value }))} className="w-24 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Planned exits</span>
-              <input type="number" min="0" value={form.plannedExitsHC} onChange={(e) => setForm((f) => ({ ...f, plannedExitsHC: e.target.value }))} className="w-24 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Notes</span>
-              <input type="text" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} className="min-w-[10rem] rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <Button type="submit" disabled={formBusy}>
+            <Input label="Month" type="month" value={form.businessMonth} onChange={(e) => setForm((f) => ({ ...f, businessMonth: e.target.value }))} />
+            <Select label="Department" value={form.departmentId} onChange={(e) => setForm((f) => ({ ...f, departmentId: e.target.value }))}>
+              <option value="">Not broken down</option>
+              {departments?.map((d) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </Select>
+            <Select label="Process" value={form.processId} onChange={(e) => setForm((f) => ({ ...f, processId: e.target.value }))}>
+              <option value="">Not broken down</option>
+              {processes?.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </Select>
+            <Select label="Location" value={form.locationId} onChange={(e) => setForm((f) => ({ ...f, locationId: e.target.value }))}>
+              <option value="">Not broken down</option>
+              {locations?.map((l) => (
+                <option key={l.id} value={l.id}>{l.name}</option>
+              ))}
+            </Select>
+            <Select label="Designation" value={form.designationId} onChange={(e) => setForm((f) => ({ ...f, designationId: e.target.value }))}>
+              <option value="">Not broken down</option>
+              {designations?.map((d) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </Select>
+            <Input label="Required HC" type="number" min="0" className="w-24" value={form.requiredHC} onChange={(e) => setForm((f) => ({ ...f, requiredHC: e.target.value }))} />
+            <Input label="Planned hires" type="number" min="0" className="w-24" value={form.plannedHiresHC} onChange={(e) => setForm((f) => ({ ...f, plannedHiresHC: e.target.value }))} />
+            <Input label="Planned exits" type="number" min="0" className="w-24" value={form.plannedExitsHC} onChange={(e) => setForm((f) => ({ ...f, plannedExitsHC: e.target.value }))} />
+            <Input label="Notes" type="text" className="min-w-[10rem]" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
+            <Button type="submit" loading={formBusy}>
               {formBusy ? "Saving..." : "Save plan"}
             </Button>
           </form>
@@ -213,42 +188,30 @@ export default function WorkforcePlanningPage() {
       </Card>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Department</span>
-          <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All</option>
-            {departments?.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Process</span>
-          <select value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All</option>
-            {processes?.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Location</span>
-          <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All</option>
-            {locations?.map((l) => (
-              <option key={l.id} value={l.id}>{l.name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Designation</span>
-          <select value={designationFilter} onChange={(e) => setDesignationFilter(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All</option>
-            {designations?.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-        </label>
+        <Select label="Department" value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}>
+          <option value="">All</option>
+          {departments?.map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </Select>
+        <Select label="Process" value={processFilter} onChange={(e) => setProcessFilter(e.target.value)}>
+          <option value="">All</option>
+          {processes?.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </Select>
+        <Select label="Location" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
+          <option value="">All</option>
+          {locations?.map((l) => (
+            <option key={l.id} value={l.id}>{l.name}</option>
+          ))}
+        </Select>
+        <Select label="Designation" value={designationFilter} onChange={(e) => setDesignationFilter(e.target.value)}>
+          <option value="">All</option>
+          {designations?.map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </Select>
       </Card>
 
       {loading && <LoadingState label="Loading plans" />}

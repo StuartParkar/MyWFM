@@ -7,6 +7,8 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 type ExceptionStatus = "DETECTED" | "ACKNOWLEDGED" | "ACTION_TAKEN" | "RESOLVED";
@@ -124,22 +126,16 @@ export default function ExceptionsPage() {
         <CardHeader title="Scan for exceptions" subtitle="Evaluates every active rule against real data for the chosen business date/process. Data Quality rules ignore this date filter - see documentation/intraday.md." />
         <CardBody>
           <form onSubmit={runScan} className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Business date</span>
-              <input type="date" value={scanBusinessDate} onChange={(e) => setScanBusinessDate(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Process</span>
-              <select value={scanProcessId} onChange={(e) => setScanProcessId(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">All processes</option>
-                {processes?.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <Button type="submit" disabled={scanBusy}>
+            <Input label="Business date" type="date" value={scanBusinessDate} onChange={(e) => setScanBusinessDate(e.target.value)} />
+            <Select label="Process" value={scanProcessId} onChange={(e) => setScanProcessId(e.target.value)}>
+              <option value="">All processes</option>
+              {processes?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+            <Button type="submit" loading={scanBusy}>
               {scanBusy ? "Scanning..." : "Scan for exceptions"}
             </Button>
           </form>
@@ -149,34 +145,22 @@ export default function ExceptionsPage() {
       </Card>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">From</span>
-          <input type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">To</span>
-          <input type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Category</span>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All categories</option>
-            <option value="STAFFING">Staffing</option>
-            <option value="SERVICE_LEVEL">Service Level</option>
-            <option value="ATTENDANCE">Attendance</option>
-            <option value="DATA_QUALITY">Data Quality</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Status</span>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All statuses</option>
-            <option value="DETECTED">Detected</option>
-            <option value="ACKNOWLEDGED">Acknowledged</option>
-            <option value="ACTION_TAKEN">Action taken</option>
-            <option value="RESOLVED">Resolved</option>
-          </select>
-        </label>
+        <Input label="From" type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} />
+        <Input label="To" type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} />
+        <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option value="">All categories</option>
+          <option value="STAFFING">Staffing</option>
+          <option value="SERVICE_LEVEL">Service Level</option>
+          <option value="ATTENDANCE">Attendance</option>
+          <option value="DATA_QUALITY">Data Quality</option>
+        </Select>
+        <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="">All statuses</option>
+          <option value="DETECTED">Detected</option>
+          <option value="ACKNOWLEDGED">Acknowledged</option>
+          <option value="ACTION_TAKEN">Action taken</option>
+          <option value="RESOLVED">Resolved</option>
+        </Select>
       </Card>
 
       {loading && <LoadingState label="Loading exceptions" />}

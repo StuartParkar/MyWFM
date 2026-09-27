@@ -7,6 +7,7 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface SourceImportRun {
@@ -82,15 +83,13 @@ export default function DataLineagePage() {
 
       <Card className="px-5 py-4">
         <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Calculation code or id</span>
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="CALC-00000042"
-              className="w-56 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink outline-none focus:border-accent"
-            />
-          </label>
+          <Input
+            label="Calculation code or id"
+            className="w-56"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="CALC-00000042"
+          />
           <Button type="submit">Look up</Button>
         </form>
       </Card>

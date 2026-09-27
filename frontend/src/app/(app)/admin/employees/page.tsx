@@ -1,12 +1,15 @@
 "use client";
 
 import { Fragment, useCallback, useState } from "react";
+import { Search } from "lucide-react";
 import type { ApiResponse, PaginatedResult } from "@mywfm/shared";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface EmployeeListItem {
@@ -99,51 +102,30 @@ function AddEmployeeForm({ onAdded }: { onAdded: () => void }) {
     <Card>
       <CardBody>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Employee Code</span>
-            <input required value={form.employeeCode} onChange={(e) => setForm({ ...form, employeeCode: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink outline-none focus:border-accent" />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Full Name</span>
-            <input required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink outline-none focus:border-accent" />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Alias</span>
-            <input value={form.aliasName} onChange={(e) => setForm({ ...form, aliasName: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink outline-none focus:border-accent" />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Department</span>
-            <select value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-              <option value="">—</option>
-              {lookups?.departments.map((d) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Location</span>
-            <select value={form.locationId} onChange={(e) => setForm({ ...form, locationId: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-              <option value="">—</option>
-              {lookups?.locations.map((l) => (
-                <option key={l.id} value={l.id}>{l.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Designation</span>
-            <select value={form.designationId} onChange={(e) => setForm({ ...form, designationId: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-              <option value="">—</option>
-              {lookups?.designations.map((d) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Join Date (if known)</span>
-            <input type="date" value={form.joinDate} onChange={(e) => setForm({ ...form, joinDate: e.target.value })} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink outline-none focus:border-accent" />
-          </label>
+          <Input label="Employee Code" required value={form.employeeCode} onChange={(e) => setForm({ ...form, employeeCode: e.target.value })} />
+          <Input label="Full Name" required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+          <Input label="Alias" value={form.aliasName} onChange={(e) => setForm({ ...form, aliasName: e.target.value })} />
+          <Select label="Department" value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })}>
+            <option value="">—</option>
+            {lookups?.departments.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </Select>
+          <Select label="Location" value={form.locationId} onChange={(e) => setForm({ ...form, locationId: e.target.value })}>
+            <option value="">—</option>
+            {lookups?.locations.map((l) => (
+              <option key={l.id} value={l.id}>{l.name}</option>
+            ))}
+          </Select>
+          <Select label="Designation" value={form.designationId} onChange={(e) => setForm({ ...form, designationId: e.target.value })}>
+            <option value="">—</option>
+            {lookups?.designations.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </Select>
+          <Input label="Join Date (if known)" type="date" value={form.joinDate} onChange={(e) => setForm({ ...form, joinDate: e.target.value })} />
           <div className="col-span-full flex items-center gap-3">
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" loading={submitting}>
               Save
             </Button>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
@@ -220,15 +202,16 @@ export default function EmployeesPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <input
+          <Input
             type="search"
+            icon={Search}
             placeholder="Search name, code, alias…"
+            className="w-64"
             value={search}
             onChange={(e) => {
               setPage(1);
               setSearch(e.target.value);
             }}
-            className="w-64 rounded-md border border-line-strong bg-surface px-3 py-1.5 text-sm text-ink outline-none focus:border-accent"
           />
         </div>
       </div>
@@ -295,25 +278,9 @@ export default function EmployeesPage() {
                       <tr className="border-b border-line bg-canvas last:border-0">
                         <td colSpan={9} className="px-4 py-3">
                           <div className="flex flex-wrap items-end gap-3">
-                            <label className="flex flex-col gap-1">
-                              <span className="text-xs font-medium text-ink-muted">Join Date</span>
-                              <input
-                                type="date"
-                                value={dateForm.joinDate}
-                                onChange={(e) => setDateForm((f) => ({ ...f, joinDate: e.target.value }))}
-                                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-                              />
-                            </label>
-                            <label className="flex flex-col gap-1">
-                              <span className="text-xs font-medium text-ink-muted">Left Date</span>
-                              <input
-                                type="date"
-                                value={dateForm.leftDate}
-                                onChange={(e) => setDateForm((f) => ({ ...f, leftDate: e.target.value }))}
-                                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-                              />
-                            </label>
-                            <Button onClick={() => saveDates(emp.employeeId)} disabled={dateSaving}>
+                            <Input label="Join Date" type="date" value={dateForm.joinDate} onChange={(e) => setDateForm((f) => ({ ...f, joinDate: e.target.value }))} />
+                            <Input label="Left Date" type="date" value={dateForm.leftDate} onChange={(e) => setDateForm((f) => ({ ...f, leftDate: e.target.value }))} />
+                            <Button onClick={() => saveDates(emp.employeeId)} loading={dateSaving}>
                               {dateSaving ? "Saving..." : "Save"}
                             </Button>
                             <Button variant="ghost" onClick={() => setEditingId(null)}>

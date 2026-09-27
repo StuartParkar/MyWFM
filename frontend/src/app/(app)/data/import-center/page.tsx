@@ -7,6 +7,7 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface ImportRunListItem {
@@ -164,21 +165,13 @@ export default function ImportCenterPage() {
         <CardHeader title="Calls" subtitle="Vonage, Elevate or RingCentral export (.xlsx) - see imports/samples/calls/README.md for the exact sheet each source expects." />
         <CardBody className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Source</span>
-              <select
-                value={callsSource}
-                onChange={(e) => setCallsSource(e.target.value)}
-                disabled={callsUploading}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              >
-                {CALLS_SOURCES.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select label="Source" value={callsSource} onChange={(e) => setCallsSource(e.target.value)} disabled={callsUploading}>
+              {CALLS_SOURCES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </Select>
             <label>
               <span className="sr-only">Upload calls file</span>
               <input

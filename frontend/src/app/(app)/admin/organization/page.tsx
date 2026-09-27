@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 
 interface CodeNameRow {
@@ -56,21 +57,9 @@ function CodeNameSection({
       <CardHeader title={title} subtitle={subtitle} />
       <CardBody className="flex flex-col gap-3">
         <form onSubmit={handleAdd} className="flex gap-2">
-          <input
-            required
-            placeholder="Code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="w-20 rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink outline-none focus:border-accent"
-          />
-          <input
-            required
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="flex-1 rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink outline-none focus:border-accent"
-          />
-          <Button type="submit" variant="secondary" disabled={submitting}>
+          <Input required placeholder="Code" className="w-20" value={code} onChange={(e) => setCode(e.target.value)} />
+          <Input required placeholder="Name" className="flex-1" value={name} onChange={(e) => setName(e.target.value)} />
+          <Button type="submit" variant="secondary" loading={submitting}>
             Add
           </Button>
         </form>
@@ -115,14 +104,8 @@ function DepartmentSection({ items, onChanged }: { items: NameRow[]; onChanged: 
       <CardHeader title="Departments" subtitle={`${items.length} total`} />
       <CardBody className="flex flex-col gap-3">
         <form onSubmit={handleAdd} className="flex gap-2">
-          <input
-            required
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="flex-1 rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink outline-none focus:border-accent"
-          />
-          <Button type="submit" variant="secondary" disabled={submitting}>
+          <Input required placeholder="Name" className="flex-1" value={name} onChange={(e) => setName(e.target.value)} />
+          <Button type="submit" variant="secondary" loading={submitting}>
             Add
           </Button>
         </form>

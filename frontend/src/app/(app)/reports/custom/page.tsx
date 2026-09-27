@@ -7,6 +7,8 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface FormulaDefinition {
@@ -88,33 +90,18 @@ export default function CustomReportsPage() {
       </div>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">From</span>
-          <input type="date" value={range.from} onChange={(e) => { setPage(1); setRange((r) => ({ ...r, from: e.target.value })); }} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">To</span>
-          <input type="date" value={range.to} onChange={(e) => { setPage(1); setRange((r) => ({ ...r, to: e.target.value })); }} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Formula</span>
-          <select value={formulaCode} onChange={(e) => { setPage(1); setFormulaCode(e.target.value); }} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="">All formulas</option>
-            {formulas?.map((f) => (
-              <option key={f.formulaCode} value={f.formulaCode}>
-                {f.name} ({f.category})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Entity Type</span>
-          <input value={entityType} onChange={(e) => { setPage(1); setEntityType(e.target.value); }} placeholder="e.g. Process, Queue" className="w-36 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Entity Id</span>
-          <input value={entityId} onChange={(e) => { setPage(1); setEntityId(e.target.value); }} className="w-36 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-        </label>
+        <Input label="From" type="date" value={range.from} onChange={(e) => { setPage(1); setRange((r) => ({ ...r, from: e.target.value })); }} />
+        <Input label="To" type="date" value={range.to} onChange={(e) => { setPage(1); setRange((r) => ({ ...r, to: e.target.value })); }} />
+        <Select label="Formula" value={formulaCode} onChange={(e) => { setPage(1); setFormulaCode(e.target.value); }}>
+          <option value="">All formulas</option>
+          {formulas?.map((f) => (
+            <option key={f.formulaCode} value={f.formulaCode}>
+              {f.name} ({f.category})
+            </option>
+          ))}
+        </Select>
+        <Input label="Entity Type" className="w-36" value={entityType} onChange={(e) => { setPage(1); setEntityType(e.target.value); }} placeholder="e.g. Process, Queue" />
+        <Input label="Entity Id" className="w-36" value={entityId} onChange={(e) => { setPage(1); setEntityId(e.target.value); }} />
       </Card>
 
       {loading && <LoadingState label="Loading ledger entries" />}

@@ -7,6 +7,7 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface DataQualityIssueListItem {
@@ -66,17 +67,13 @@ export default function DataQualityPage() {
           <h1 className="text-lg font-semibold text-ink">Data Quality</h1>
           <p className="mt-1 text-sm text-ink-muted">Every anomaly an import finds, by severity, with a suggested corrective path.</p>
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as (typeof STATUS_FILTERS)[number])}
-          className="rounded-md border border-line-strong bg-surface px-2.5 py-1.5 text-sm text-ink"
-        >
+        <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as (typeof STATUS_FILTERS)[number])}>
           {STATUS_FILTERS.map((s) => (
             <option key={s} value={s}>
               {s === "ALL" ? "All statuses" : s}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {loading && <LoadingState label="Loading data quality issues" />}

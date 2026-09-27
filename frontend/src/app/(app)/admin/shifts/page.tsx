@@ -7,6 +7,7 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface ShiftRow {
@@ -73,38 +74,10 @@ export default function ShiftsPage() {
 
       <Card>
         <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3 p-4">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Code</span>
-            <input
-              type="text"
-              required
-              placeholder="e.g. 17-02"
-              value={shiftCode}
-              onChange={(e) => setShiftCode(e.target.value)}
-              className="w-28 rounded-md border border-line-strong bg-surface px-3 py-1.5 text-sm text-ink outline-none focus:border-accent"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Start</span>
-            <input
-              type="time"
-              required
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="rounded-md border border-line-strong bg-surface px-3 py-1.5 text-sm text-ink outline-none focus:border-accent"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">End</span>
-            <input
-              type="time"
-              required
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="rounded-md border border-line-strong bg-surface px-3 py-1.5 text-sm text-ink outline-none focus:border-accent"
-            />
-          </label>
-          <Button type="submit" disabled={submitting}>
+          <Input label="Code" type="text" required placeholder="e.g. 17-02" className="w-28" value={shiftCode} onChange={(e) => setShiftCode(e.target.value)} />
+          <Input label="Start" type="time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+          <Input label="End" type="time" required value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+          <Button type="submit" loading={submitting}>
             Add shift
           </Button>
           {formError && <span className="text-sm text-critical">{formError}</span>}

@@ -8,6 +8,7 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface DailySummary {
@@ -198,38 +199,30 @@ export default function AttendancePage() {
       </div>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">From</span>
-          <input
-            type="date"
-            value={range.from}
-            onChange={(e) => {
-              setPage(1);
-              setRange((r) => ({ ...r, from: e.target.value }));
-            }}
-            className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">To</span>
-          <input
-            type="date"
-            value={range.to}
-            onChange={(e) => {
-              setPage(1);
-              setRange((r) => ({ ...r, to: e.target.value }));
-            }}
-            className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Employee Code (optional)</span>
-          <input
-            value={employeeCode}
-            onChange={(e) => setEmployeeCode(e.target.value)}
-            className="w-48 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-          />
-        </label>
+        <Input
+          label="From"
+          type="date"
+          value={range.from}
+          onChange={(e) => {
+            setPage(1);
+            setRange((r) => ({ ...r, from: e.target.value }));
+          }}
+        />
+        <Input
+          label="To"
+          type="date"
+          value={range.to}
+          onChange={(e) => {
+            setPage(1);
+            setRange((r) => ({ ...r, to: e.target.value }));
+          }}
+        />
+        <Input
+          label="Employee Code (optional)"
+          className="w-48"
+          value={employeeCode}
+          onChange={(e) => setEmployeeCode(e.target.value)}
+        />
         <Button variant="secondary" onClick={applyEmployeeFilter}>Apply filter</Button>
         {employeeFilterError && <span className="text-sm text-critical">{employeeFilterError}</span>}
       </Card>
@@ -238,61 +231,44 @@ export default function AttendancePage() {
         <CardHeader title="Record a session" subtitle="Manual entry / authorized adjustment - every source is stored, never guessed." />
         <CardBody>
           <form onSubmit={submitEntry} className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Employee Code</span>
-              <input
-                value={entryForm.employeeCode}
-                onChange={(e) => setEntryForm((f) => ({ ...f, employeeCode: e.target.value }))}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Business Date</span>
-              <input
-                type="date"
-                value={entryForm.businessDate}
-                onChange={(e) => setEntryForm((f) => ({ ...f, businessDate: e.target.value }))}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Session Start ({businessDay?.timezone ?? "…"})</span>
-              <input
-                type="datetime-local"
-                value={entryForm.sessionStart}
-                onChange={(e) => setEntryForm((f) => ({ ...f, sessionStart: e.target.value }))}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Session End (optional)</span>
-              <input
-                type="datetime-local"
-                value={entryForm.sessionEnd}
-                onChange={(e) => setEntryForm((f) => ({ ...f, sessionEnd: e.target.value }))}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Break Minutes</span>
-              <input
-                type="number"
-                min={0}
-                value={entryForm.breakMinutes}
-                onChange={(e) => setEntryForm((f) => ({ ...f, breakMinutes: e.target.value }))}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <label className="col-span-2 flex flex-col gap-1 md:col-span-3">
-              <span className="text-xs font-medium text-ink-muted">Reason (optional)</span>
-              <input
-                value={entryForm.reason}
-                onChange={(e) => setEntryForm((f) => ({ ...f, reason: e.target.value }))}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
+            <Input
+              label="Employee Code"
+              value={entryForm.employeeCode}
+              onChange={(e) => setEntryForm((f) => ({ ...f, employeeCode: e.target.value }))}
+            />
+            <Input
+              label="Business Date"
+              type="date"
+              value={entryForm.businessDate}
+              onChange={(e) => setEntryForm((f) => ({ ...f, businessDate: e.target.value }))}
+            />
+            <Input
+              label={`Session Start (${businessDay?.timezone ?? "…"})`}
+              type="datetime-local"
+              value={entryForm.sessionStart}
+              onChange={(e) => setEntryForm((f) => ({ ...f, sessionStart: e.target.value }))}
+            />
+            <Input
+              label="Session End (optional)"
+              type="datetime-local"
+              value={entryForm.sessionEnd}
+              onChange={(e) => setEntryForm((f) => ({ ...f, sessionEnd: e.target.value }))}
+            />
+            <Input
+              label="Break Minutes"
+              type="number"
+              min={0}
+              value={entryForm.breakMinutes}
+              onChange={(e) => setEntryForm((f) => ({ ...f, breakMinutes: e.target.value }))}
+            />
+            <Input
+              label="Reason (optional)"
+              className="col-span-2 md:col-span-3"
+              value={entryForm.reason}
+              onChange={(e) => setEntryForm((f) => ({ ...f, reason: e.target.value }))}
+            />
             <div className="col-span-full flex items-center gap-3">
-              <Button type="submit" disabled={entryBusy || !businessDay}>Record session</Button>
+              <Button type="submit" loading={entryBusy} disabled={!businessDay}>Record session</Button>
               {entryError && <span className="text-sm text-critical">{entryError}</span>}
             </div>
           </form>
@@ -461,18 +437,9 @@ function SessionRowEditor({ session, timezone, onChanged }: { session: SessionRo
         <Badge tone="neutral">{session.source}</Badge>
       </div>
       <div className="mt-2 flex flex-wrap items-end gap-2">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">New Session End</span>
-          <input type="datetime-local" value={sessionEnd} onChange={(e) => setSessionEnd(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Break Minutes</span>
-          <input type="number" min={0} value={breakMinutes} onChange={(e) => setBreakMinutes(e.target.value)} className="w-24 rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink" />
-        </label>
-        <label className="flex flex-1 min-w-40 flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Reason</span>
-          <input value={reason} onChange={(e) => setReason(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink" />
-        </label>
+        <Input label="New Session End" type="datetime-local" value={sessionEnd} onChange={(e) => setSessionEnd(e.target.value)} />
+        <Input label="Break Minutes" type="number" min={0} className="w-24" value={breakMinutes} onChange={(e) => setBreakMinutes(e.target.value)} />
+        <Input label="Reason" className="min-w-40 flex-1" value={reason} onChange={(e) => setReason(e.target.value)} />
         <Button variant="secondary" disabled={busy} onClick={adjust}>Adjust</Button>
         <Button variant="danger" disabled={busy} onClick={remove}>Remove</Button>
       </div>

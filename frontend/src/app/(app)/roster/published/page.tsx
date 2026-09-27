@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface PublishedRosterRow {
@@ -60,30 +61,24 @@ export default function PublishedRosterPage() {
       </div>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">From</span>
-          <input
-            type="date"
-            value={range.from}
-            onChange={(e) => {
-              setPage(1);
-              setRange((r) => ({ ...r, from: e.target.value }));
-            }}
-            className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">To</span>
-          <input
-            type="date"
-            value={range.to}
-            onChange={(e) => {
-              setPage(1);
-              setRange((r) => ({ ...r, to: e.target.value }));
-            }}
-            className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-          />
-        </label>
+        <Input
+          label="From"
+          type="date"
+          value={range.from}
+          onChange={(e) => {
+            setPage(1);
+            setRange((r) => ({ ...r, from: e.target.value }));
+          }}
+        />
+        <Input
+          label="To"
+          type="date"
+          value={range.to}
+          onChange={(e) => {
+            setPage(1);
+            setRange((r) => ({ ...r, to: e.target.value }));
+          }}
+        />
       </Card>
 
       {loading && <LoadingState label="Loading published roster" />}

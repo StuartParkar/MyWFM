@@ -7,6 +7,7 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface BackupManifest {
@@ -145,10 +146,7 @@ export default function BackupRestorePage() {
           ) : (
             <p className="text-sm text-ink-muted">Pick a completed backup above, or fill in a path to a backup you have elsewhere.</p>
           )}
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink-muted">Target directory</span>
-            <input value={restoreTarget} onChange={(e) => setRestoreTarget(e.target.value)} className="w-96 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink outline-none focus:border-accent" />
-          </label>
+          <Input label="Target directory" className="w-96" value={restoreTarget} onChange={(e) => setRestoreTarget(e.target.value)} />
           <div>
             <p className="mb-1 text-xs font-medium text-ink-muted">Run this on the target machine:</p>
             <pre className="overflow-x-auto rounded-md bg-canvas p-3 text-xs text-ink">scripts/restore-mywfm.sh {restoreSource} {restoreTarget || "mywfm-restored"}</pre>

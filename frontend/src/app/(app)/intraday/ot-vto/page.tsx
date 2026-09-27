@@ -7,6 +7,8 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 type RequestType = "OVERTIME" | "VTO";
@@ -197,47 +199,32 @@ export default function OtVtoPage() {
         <CardHeader title="Submit a request" />
         <CardBody className="flex flex-col gap-4">
           <form onSubmit={submitRequest} className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Type</span>
-              <select value={formType} onChange={(e) => setFormType(e.target.value as RequestType)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="OVERTIME">Overtime</option>
-                <option value="VTO">VTO / early release</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Business date</span>
-              <input
-                type="date"
-                value={formBusinessDate}
-                onChange={(e) => {
-                  setFormBusinessDate(e.target.value);
-                  setFormEmployeeId("");
-                }}
-                className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
+            <Select label="Type" value={formType} onChange={(e) => setFormType(e.target.value as RequestType)}>
+              <option value="OVERTIME">Overtime</option>
+              <option value="VTO">VTO / early release</option>
+            </Select>
+            <Input
+              label="Business date"
+              type="date"
+              value={formBusinessDate}
+              onChange={(e) => {
+                setFormBusinessDate(e.target.value);
+                setFormEmployeeId("");
+              }}
+            />
             {canActForOthers && (
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium text-ink-muted">Employee</span>
-                <select value={formEmployeeId} onChange={(e) => setFormEmployeeId(e.target.value)} className="min-w-[14rem] rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                  <option value="">Select an employee</option>
-                  {scheduledEmployees?.map((emp) => (
-                    <option key={emp.employeeId} value={emp.employeeId}>
-                      {emp.employeeName} ({emp.employeeCode})
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <Select label="Employee" className="min-w-[14rem]" value={formEmployeeId} onChange={(e) => setFormEmployeeId(e.target.value)}>
+                <option value="">Select an employee</option>
+                {scheduledEmployees?.map((emp) => (
+                  <option key={emp.employeeId} value={emp.employeeId}>
+                    {emp.employeeName} ({emp.employeeCode})
+                  </option>
+                ))}
+              </Select>
             )}
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Hours</span>
-              <input type="number" min="0.5" max="24" step="0.5" value={formHours} onChange={(e) => setFormHours(e.target.value)} className="w-24 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Reason</span>
-              <input type="text" value={formReason} onChange={(e) => setFormReason(e.target.value)} className="min-w-[12rem] rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <Button type="submit" disabled={formBusy}>
+            <Input label="Hours" type="number" min="0.5" max="24" step="0.5" className="w-24" value={formHours} onChange={(e) => setFormHours(e.target.value)} />
+            <Input label="Reason" type="text" className="min-w-[12rem]" value={formReason} onChange={(e) => setFormReason(e.target.value)} />
+            <Button type="submit" loading={formBusy}>
               {formBusy ? "Submitting..." : "Submit request"}
             </Button>
           </form>
@@ -282,16 +269,13 @@ export default function OtVtoPage() {
       </Card>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Status</span>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-            <option value="REQUESTED">Requested (pending)</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-            <option value="CANCELLED">Cancelled</option>
-            <option value="">All</option>
-          </select>
-        </label>
+        <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="REQUESTED">Requested (pending)</option>
+          <option value="APPROVED">Approved</option>
+          <option value="REJECTED">Rejected</option>
+          <option value="CANCELLED">Cancelled</option>
+          <option value="">All</option>
+        </Select>
       </Card>
 
       {loading && <LoadingState label="Loading requests" />}

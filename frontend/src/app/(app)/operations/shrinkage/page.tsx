@@ -7,6 +7,8 @@ import { useAsyncResource, type AsyncResult } from "@/lib/hooks/useAsyncResource
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface DailyShrinkage {
@@ -150,63 +152,42 @@ export default function ShrinkagePage() {
       </div>
 
       <Card className="flex flex-wrap items-end gap-3 px-5 py-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">From</span>
-          <input
-            type="date"
-            value={range.from}
-            onChange={(e) => {
-              setPage(1);
-              setRange((r) => ({ ...r, from: e.target.value }));
-            }}
-            className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">To</span>
-          <input
-            type="date"
-            value={range.to}
-            onChange={(e) => {
-              setPage(1);
-              setRange((r) => ({ ...r, to: e.target.value }));
-            }}
-            className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
-          />
-        </label>
+        <Input
+          label="From"
+          type="date"
+          value={range.from}
+          onChange={(e) => {
+            setPage(1);
+            setRange((r) => ({ ...r, from: e.target.value }));
+          }}
+        />
+        <Input
+          label="To"
+          type="date"
+          value={range.to}
+          onChange={(e) => {
+            setPage(1);
+            setRange((r) => ({ ...r, to: e.target.value }));
+          }}
+        />
       </Card>
 
       <Card>
         <CardHeader title="Record shrinkage" />
         <CardBody>
           <form onSubmit={submitEntry} className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Employee Code</span>
-              <input value={form.employeeCode} onChange={(e) => setForm((f) => ({ ...f, employeeCode: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Business Date</span>
-              <input type="date" value={form.businessDate} onChange={(e) => setForm((f) => ({ ...f, businessDate: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Category</span>
-              <select value={form.shrinkageCategoryId} onChange={(e) => setForm((f) => ({ ...f, shrinkageCategoryId: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink">
-                <option value="">—</option>
-                {categories?.map((c) => (
-                  <option key={c.shrinkageCategoryId} value={c.shrinkageCategoryId}>{c.categoryName}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Minutes</span>
-              <input type="number" min={1} value={form.minutes} onChange={(e) => setForm((f) => ({ ...f, minutes: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-ink-muted">Notes (optional)</span>
-              <input value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink" />
-            </label>
+            <Input label="Employee Code" value={form.employeeCode} onChange={(e) => setForm((f) => ({ ...f, employeeCode: e.target.value }))} />
+            <Input label="Business Date" type="date" value={form.businessDate} onChange={(e) => setForm((f) => ({ ...f, businessDate: e.target.value }))} />
+            <Select label="Category" value={form.shrinkageCategoryId} onChange={(e) => setForm((f) => ({ ...f, shrinkageCategoryId: e.target.value }))}>
+              <option value="">—</option>
+              {categories?.map((c) => (
+                <option key={c.shrinkageCategoryId} value={c.shrinkageCategoryId}>{c.categoryName}</option>
+              ))}
+            </Select>
+            <Input label="Minutes" type="number" min={1} value={form.minutes} onChange={(e) => setForm((f) => ({ ...f, minutes: e.target.value }))} />
+            <Input label="Notes (optional)" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
             <div className="col-span-full flex items-center gap-3">
-              <Button type="submit" disabled={busy}>Record</Button>
+              <Button type="submit" loading={busy}>Record</Button>
               {formError && <span className="text-sm text-critical">{formError}</span>}
             </div>
           </form>
@@ -352,22 +333,13 @@ function ShrinkageEntryEditor({ entry, categories, onChanged }: { entry: Shrinka
         <Badge tone="neutral">{entry.source}</Badge>
       </div>
       <div className="mt-2 flex flex-wrap items-end gap-2">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Category</span>
-          <select value={shrinkageCategoryId} onChange={(e) => setShrinkageCategoryId(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink">
-            {categories.map((c) => (
-              <option key={c.shrinkageCategoryId} value={c.shrinkageCategoryId}>{c.categoryName}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Minutes</span>
-          <input type="number" min={1} value={minutes} onChange={(e) => setMinutes(e.target.value)} className="w-24 rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink" />
-        </label>
-        <label className="flex flex-1 min-w-40 flex-col gap-1">
-          <span className="text-xs font-medium text-ink-muted">Reason</span>
-          <input value={reason} onChange={(e) => setReason(e.target.value)} className="rounded-md border border-line-strong bg-surface px-2 py-1 text-sm text-ink" />
-        </label>
+        <Select label="Category" value={shrinkageCategoryId} onChange={(e) => setShrinkageCategoryId(e.target.value)}>
+          {categories.map((c) => (
+            <option key={c.shrinkageCategoryId} value={c.shrinkageCategoryId}>{c.categoryName}</option>
+          ))}
+        </Select>
+        <Input label="Minutes" type="number" min={1} className="w-24" value={minutes} onChange={(e) => setMinutes(e.target.value)} />
+        <Input label="Reason" className="min-w-40 flex-1" value={reason} onChange={(e) => setReason(e.target.value)} />
         <Button variant="secondary" disabled={busy} onClick={adjust}>Adjust</Button>
         <Button variant="danger" disabled={busy} onClick={remove}>Remove</Button>
       </div>
