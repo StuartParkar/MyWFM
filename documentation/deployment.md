@@ -19,13 +19,37 @@ the environment can still run outside Docker).
 ```bash
 cp .env.example .env   # fill in a real SQL_SERVER_PASSWORD, JWT secrets
 docker compose up -d --build
-docker compose exec backend npm run db:migrate --workspace=backend
-docker compose exec backend npm run db:seed --workspace=backend
+docker compose exec backend node dist/db/migrateCli.js up
+docker compose exec backend node dist/db/seed.js
+docker compose exec backend node dist/scripts/createAdmin.js --email you@company.com --password 'Str0ngPass!'
 ```
+
+Note the exact commands above, not `npm run db:migrate --workspace=backend`
+as you'd run locally: the runtime image only ships `backend/`'s own
+`package.json` (no root workspace config, so `--workspace` has nothing to
+resolve), and its `db:migrate`/`db:seed` npm scripts hard-code
+`tsx --env-file=.env ...`, but there's no `.env` file inside the
+container - compose already injects the real environment directly. Calling
+the compiled `dist/` entrypoints directly sidesteps both.
 
 Services: `db` (SQL Server 2022, healthchecked before `backend` starts),
 `backend` (Express API, port 4000), `frontend` (Next.js standalone build,
 port 3000, proxies `/api/*` to `backend` inside the compose network).
+`db:migrate` creates the target database itself if it doesn't exist yet
+(connects to `master` first) - a fresh `docker compose up` has nothing else
+that would create it.
+
+If port 1433 is already taken on the host (e.g. a native SQL Server
+install), set `SQL_SERVER_PORT` in the root `.env` to something else before
+starting - see `documentation/troubleshooting.md`.
+
+**Known gap, not fixed this phase:** `backend` connects to `db` as `sa`
+(`docker-compose.yml`), not a dedicated least-privilege login the way
+`documentation/security.md` otherwise expects. Verified end-to-end for the
+first time in Phase 12 as-is; scoping it down to its own login (mirroring
+how `create-admin` already keeps app credentials separate from the database
+credential) is real follow-up work, not done here to avoid changing the
+compose stack's shape while first verifying it actually runs at all.
 
 ## Production (bare metal / VM)
 

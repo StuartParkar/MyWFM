@@ -172,7 +172,52 @@ Phase N" screen instead of a fake one
       request handler cannot become). See
       `documentation/lineage-and-reprocessing.md` and
       `documentation/backup-restore.md`.
-- [ ] **Phase 12 - Hardening**: performance, security, tests, deployment package.
+- [x] **Phase 12 - Hardening**: this project's own dev sandbox never had a
+      reachable SQL Server or Docker daemon through Phase 11 - this phase got
+      both for the first time and used them for real, not just to write more
+      mocked tests. Running the real migrations immediately found two classes
+      of bug no mock could have caught: two migrations used a column-level
+      `CHECK` referencing another column (SQL Server rejects this outright -
+      moved to table-level constraints) and three repository files used
+      `proc` as a table alias (also rejected - renamed to `mp`), meaning
+      Roster's requirement detail/list, Workforce Planning, Scenario listing
+      and Staffing coverage had never actually run against a real database
+      before. **Security**: rate limiting (`express-rate-limit`) on
+      login/refresh, a defense-in-depth CSRF header check on the two
+      cookie-only-authenticated routes (every other route needs a bearer
+      token unreachable to a cross-site page), explicit HTTP keep-alive/
+      headers timeouts, and a real `npm audit` fix (`uuid` override, verified
+      safe by reading how `exceljs` actually calls it) - the `vitest`/`vite`
+      advisories are deliberately deferred with the reason recorded
+      (upgrading hit a genuinely broken dependency chain in this environment;
+      the one critical advisory only affects `vitest --ui`, unused here).
+      **Performance**: three missing indexes on the highest-volume tables
+      (new migration `0016`), `roster.publishRequirement` batched from 2-3
+      sequential queries per assigned employee to 3 total regardless of
+      headcount (also fixing a latent partial-publish risk), and a 366-day
+      cap added to the two call-metrics endpoints that had none. Two bigger,
+      real N+1 patterns were found and deliberately left for a future phase
+      instead of rewritten under time pressure - see
+      `documentation/testing.md`. **Tests**: a new `backend/tests/integration/`
+      suite (`npm run test:integration --workspace=backend`) runs against a
+      live SQL Server - migration idempotency, seed idempotency, and the
+      roster publish rewrite with real fixture data - kept separate from
+      `npm test` so the default suite stays portable everywhere. **Deployment
+      package**: `docker compose up -d --build` was run for the first time
+      ever and needed three real fixes - a missing `frontend/public` source
+      directory, Docker's auto-set `HOSTNAME` making the Next.js standalone
+      server bind to only its container IP instead of all interfaces, and
+      both Dockerfiles' healthchecks using `localhost` where this Alpine
+      image's `wget` resolves to an IPv6 address nothing listens on - plus a
+      real gap where nothing ever created the target database on a brand-new
+      server (`migrate.ts` now does, connecting to `master` first). The full
+      stack (`db`+`backend`+`frontend`, all three healthy) was verified
+      end-to-end in a real browser: login, real data, logout. See
+      `documentation/security.md`, `documentation/testing.md`,
+      `documentation/deployment.md`, and `documentation/troubleshooting.md`
+      for the complete detail, including what's deliberately still open (the
+      compose stack's `backend` connects to `db` as `sa` rather than a
+      dedicated login, and the two deferred N+1 patterns above).
 
 ## Repository layout
 
@@ -192,9 +237,10 @@ documentation/   Architecture, database, security, API, deployment, backup/resto
 ```bash
 npm run dev         # backend + frontend
 npm run build       # shared -> backend -> frontend
-npm test            # shared + backend unit tests
+npm test            # shared + backend unit tests (mocked DB, portable everywhere)
 npm run typecheck
 npm run lint
+npm run test:integration --workspace=backend   # real SQL Server required - see documentation/testing.md
 ```
 
 See `documentation/testing.md` for what is and isn't covered yet, and

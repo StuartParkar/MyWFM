@@ -59,10 +59,10 @@ documentation/  this folder
 
 ## What phase built what (so far)
 
-Only Phase 1 (security/config/audit/system foundation) is built. See the
-root `README.md` for the full phase tracker and what each subsequent phase
-adds. Every nav item that isn't backed by Phase 1 renders `ComingSoon` with
-the actual phase number it's scheduled for - that mapping lives in
+Phases 1-11 plus Attrition and part of Phase 12 (hardening) are built - see
+the root `README.md` for the full phase tracker and what each phase added.
+Any nav item not yet backed by a real phase renders `ComingSoon` with the
+actual phase number it's scheduled for - that mapping lives in
 `frontend/src/lib/nav/navTree.ts` and is the single source of truth for both
 the sidebar and the placeholder pages.
 

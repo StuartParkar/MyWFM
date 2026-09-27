@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { getPool, sql } from "./pool.js";
+import { env } from "../config/env.js";
 import { logger } from "../logger/logger.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -77,6 +78,49 @@ async function ensureSchemaMigrationTable(): Promise<void> {
   `);
 }
 
+const SAFE_DB_NAME = /^[A-Za-z0-9_]+$/;
+
+/**
+ * Connecting straight to SQL_SERVER_DATABASE when it doesn't exist yet
+ * produces a misleading "Login failed for user" error (SQL Server's login
+ * response for an unknown initial catalog), not a clear "database does not
+ * exist" - found by actually running this against a fresh SQL Server
+ * container, where nothing had ever created UniversalMyWFM. Connects to
+ * master on its own short-lived pool (getPool()'s shared pool is locked to
+ * SQL_SERVER_DATABASE) so `db:migrate` works unattended on a brand-new server.
+ */
+async function ensureDatabaseExists(): Promise<void> {
+  if (!SAFE_DB_NAME.test(env.SQL_SERVER_DATABASE)) {
+    throw new Error(`Refusing to use unsafe database name "${env.SQL_SERVER_DATABASE}"`);
+  }
+
+  const masterPool = await new sql.ConnectionPool({
+    server: env.SQL_SERVER_HOST,
+    port: env.SQL_SERVER_PORT,
+    database: "master",
+    user: env.SQL_SERVER_USER,
+    password: env.SQL_SERVER_PASSWORD,
+    options: {
+      encrypt: env.SQL_SERVER_ENCRYPT,
+      trustServerCertificate: env.SQL_SERVER_TRUST_SERVER_CERTIFICATE,
+    },
+  }).connect();
+
+  try {
+    const result = await masterPool
+      .request()
+      .input("DbName", sql.NVarChar(128), env.SQL_SERVER_DATABASE)
+      .query("SELECT database_id FROM sys.databases WHERE name = @DbName");
+
+    if (result.recordset.length === 0) {
+      logger.info({ database: env.SQL_SERVER_DATABASE }, "Target database does not exist - creating it");
+      await masterPool.request().batch(`CREATE DATABASE [${env.SQL_SERVER_DATABASE}]`);
+    }
+  } finally {
+    await masterPool.close();
+  }
+}
+
 interface AppliedRow {
   Filename: string;
   Checksum: string;
@@ -125,6 +169,7 @@ async function runBatchesInTransaction(batches: string[]): Promise<void> {
 
 /** Applies pending numbered migrations, in filename order. Throws on checksum drift on an already-applied file rather than silently re-running or ignoring it. */
 export async function applyMigrations(appliedBy: string): Promise<{ applied: string[] }> {
+  await ensureDatabaseExists();
   await ensureSchemaMigrationTable();
   const applied = await getAppliedMigrations();
   const files = listSqlFilesRecursive(MIGRATIONS_DIR);

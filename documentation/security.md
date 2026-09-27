@@ -63,12 +63,49 @@ attendance adjustment, configuration change, ...) calls the same function.
 because the frontend proxies `/api/*` to the backend server-side (see
 `architecture.md`) rather than the browser calling a different origin
 directly - see `documentation/deployment.md` for when `CORS_ORIGIN` still
-matters (direct API calls, e.g. from a script or Postman).
+matters (direct API calls, e.g. from a script or Postman). `server.ts` sets
+`keepAliveTimeout`/`headersTimeout` explicitly (Phase 12) rather than
+leaving Node's defaults implicit.
 
-## What's out of scope for Phase 1
+## Rate limiting (Phase 12)
 
-CSRF protection is not yet implemented as a distinct layer - it's on the
-Phase 12 ("security hardening") list. It matters less right now because the
-only state-changing endpoints are auth endpoints already protected by the
-`sameSite=lax` cookie policy, but it must be revisited before any
-cookie-authenticated form-like mutation exists.
+`backend/src/middleware/rateLimit.ts`'s `authRateLimiter`
+(`express-rate-limit`, 20 requests / 15 min, keyed by IP) sits in front of
+`POST /api/auth/login` and `POST /api/auth/refresh`. Before this, the only
+brute-force cost was the per-account lockout in `auth.repository.ts`, which
+only engages once an email resolves to a real, active account - hammering
+the endpoint with unknown emails, or spreading attempts across many
+accounts, had no cost at all.
+
+## CSRF
+
+Genuinely absent as a dedicated synchronizer-token layer, but the real
+exposure is narrower than that sounds: every protected route requires a
+bearer access token that only exists in the frontend's in-memory
+`AuthContext` - a cross-site page has no way to obtain or attach it. The
+**only** routes authenticated by a cookie alone are `POST /api/auth/refresh`
+and `POST /api/auth/logout`, and both already sit behind `sameSite=lax`
+(browsers don't attach a Lax cookie to a cross-site POST). Phase 12 adds one
+more layer on top: `backend/src/middleware/requireFetchHeader.ts` rejects
+either route unless `X-Requested-With: XMLHttpRequest` is present - a
+plain cross-site `<form>` POST cannot set a custom header, so this closes
+the gap even for browsers or configurations where SameSite enforcement is
+weaker than expected. The frontend's `AuthContext` sends this header on
+every call to either route.
+
+## Dependencies (Phase 12)
+
+`npm audit` is clean except for `vitest`/`vite`/`vite-node`/`@vitest/mocker`
+(1 critical, 3 moderate - all dev-only, never shipped). The suggested fix
+(`vitest@^5.0.2`) was attempted and reverted: it pulls in a `vite@8.x` whose
+dependency chain (`rolldown`, then `obug`) was genuinely broken in this
+environment - missing packages the installer never resolved, not a
+version-compatibility problem. The one advisory rated critical
+(GHSA-5xrq-8626-4rwp) only applies when `vitest --ui` is running, which this
+project never does (`vitest run` only). Revisit the version bump once that
+release line has stabilized. The other finding (`uuid` <11.1.1 via
+`exceljs`) **is** fixed: a root `package.json` `overrides` entry pins
+`uuid@^11.1.1` - verified safe by reading `exceljs`'s own source
+(`node_modules/exceljs/lib/xlsx/xform/sheet/cf-ext/cf-rule-ext-xform.js`),
+which only ever calls `uuid.v4()` with no arguments, never the
+caller-supplied-`buf` path the advisory is about.
