@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { closePool } from "../db/pool.js";
 import { logger } from "../logger/logger.js";
 import { isCallsSource, importCallsFile, type CallsSource } from "../modules/calls/callsImporter.js";
@@ -44,7 +44,11 @@ async function main(): Promise<void> {
   logger.info(result, `${result.importCode}: complete`);
 }
 
-const isMainModule = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
+// `file://${process.argv[1]}` string concatenation never matches on Windows: import.meta.url
+// uses forward slashes with a file:/// prefix, while process.argv[1] is the raw backslash path -
+// confirmed directly by printing both sides, and it silently made main() never run at all rather
+// than erroring. pathToFileURL normalizes both sides correctly on every platform.
+const isMainModule = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMainModule) {
   main()
     .catch((err) => {
