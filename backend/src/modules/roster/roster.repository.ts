@@ -205,11 +205,11 @@ export async function listAssignments(requirementId: number): Promise<{ employee
     .request()
     .input("RequirementId", sql.BigInt, requirementId)
     .query<{ EmployeeId: string; FullName: string; EmployeeCode: string }>(`
-      SELECT e.EmployeeId, e.FullName, e.EmployeeCode
+      SELECT e.EmployeeId, COALESCE(e.AliasName, e.FullName) AS FullName, e.EmployeeCode
       FROM [roster].RosterRequirementAssignment a
       JOIN [master].Employee e ON e.EmployeeId = a.EmployeeId
       WHERE a.RosterRequirementId = @RequirementId
-      ORDER BY e.FullName
+      ORDER BY COALESCE(e.AliasName, e.FullName)
     `);
   return result.recordset.map((r) => ({ employeeId: r.EmployeeId, fullName: r.FullName, employeeCode: r.EmployeeCode }));
 }
@@ -307,14 +307,14 @@ export async function listPublishedRoster(params: { businessDateFrom: string; bu
       TotalCount: number;
     }>(`
       SELECT
-        pr.PublishedRosterId, pr.EmployeeId, e.FullName AS EmployeeName,
+        pr.PublishedRosterId, pr.EmployeeId, COALESCE(e.AliasName, e.FullName) AS EmployeeName,
         CONVERT(VARCHAR(10), pr.BusinessDate, 23) AS BusinessDate, sh.ShiftCode, pr.Version,
         COUNT(*) OVER() AS TotalCount
       FROM [roster].PublishedRoster pr
       JOIN [master].Employee e ON e.EmployeeId = pr.EmployeeId
       LEFT JOIN [master].Shift sh ON sh.ShiftId = pr.ShiftId
       WHERE pr.IsActive = 1 AND pr.BusinessDate BETWEEN @From AND @To
-      ORDER BY pr.BusinessDate, e.FullName
+      ORDER BY pr.BusinessDate, COALESCE(e.AliasName, e.FullName)
       OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
     `);
   const totalItems = result.recordset[0]?.TotalCount ?? 0;
@@ -467,7 +467,7 @@ export async function listRosterChanges(page: number, pageSize: number): Promise
       TotalCount: number;
     }>(`
       SELECT
-        rc.RosterChangeId, e.FullName AS EmployeeName, CONVERT(VARCHAR(10), rc.BusinessDate, 23) AS BusinessDate,
+        rc.RosterChangeId, COALESCE(e.AliasName, e.FullName) AS EmployeeName, CONVERT(VARCHAR(10), rc.BusinessDate, 23) AS BusinessDate,
         oldSh.ShiftCode AS OldShiftCode, newSh.ShiftCode AS NewShiftCode, rc.Reason, u.DisplayName AS RequestedByName, rc.CreatedAt,
         COUNT(*) OVER() AS TotalCount
       FROM [roster].RosterChange rc

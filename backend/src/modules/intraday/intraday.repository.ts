@@ -210,7 +210,7 @@ export async function getBreakSession(id: number): Promise<BreakSessionRow | nul
     BreakStart: Date;
     BreakEnd: Date | null;
   }>(`
-    SELECT bs.BreakSessionId, bs.EmployeeId, e.EmployeeCode, e.FullName AS EmployeeName,
+    SELECT bs.BreakSessionId, bs.EmployeeId, e.EmployeeCode, COALESCE(e.AliasName, e.FullName) AS EmployeeName,
            CONVERT(VARCHAR(10), bs.BusinessDate, 23) AS BusinessDate, bs.BreakStart, bs.BreakEnd
     FROM [attendance].BreakSession bs
     JOIN [master].Employee e ON e.EmployeeId = bs.EmployeeId
@@ -246,7 +246,7 @@ export async function listBreakSessionsForDate(params: { businessDate: string; p
     .input("BusinessDate", sql.Date, params.businessDate)
     .input("ProcessId", sql.Int, params.processId ?? null)
     .query<{ BreakSessionId: number; EmployeeId: string; EmployeeCode: string; EmployeeName: string; BusinessDate: string; BreakStart: Date; BreakEnd: Date | null }>(`
-      SELECT bs.BreakSessionId, bs.EmployeeId, e.EmployeeCode, e.FullName AS EmployeeName,
+      SELECT bs.BreakSessionId, bs.EmployeeId, e.EmployeeCode, COALESCE(e.AliasName, e.FullName) AS EmployeeName,
              CONVERT(VARCHAR(10), bs.BusinessDate, 23) AS BusinessDate, bs.BreakStart, bs.BreakEnd
       FROM [attendance].BreakSession bs
       JOIN [master].Employee e ON e.EmployeeId = bs.EmployeeId
@@ -275,13 +275,13 @@ export async function listScheduledEmployeesForDate(params: { businessDate: stri
     .input("BusinessDate", sql.Date, params.businessDate)
     .input("ProcessId", sql.Int, params.processId ?? null)
     .query<{ EmployeeId: string; EmployeeCode: string; EmployeeName: string }>(`
-      SELECT DISTINCT pr.EmployeeId, e.EmployeeCode, e.FullName AS EmployeeName
+      SELECT DISTINCT pr.EmployeeId, e.EmployeeCode, COALESCE(e.AliasName, e.FullName) AS EmployeeName
       FROM [roster].PublishedRoster pr
       JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
       JOIN [master].Employee e ON e.EmployeeId = pr.EmployeeId
       WHERE pr.IsActive = 1 AND pr.BusinessDate = @BusinessDate AND pr.IsWeeklyOff = 0
         AND (@ProcessId IS NULL OR rr.ProcessId = @ProcessId)
-      ORDER BY e.FullName
+      ORDER BY COALESCE(e.AliasName, e.FullName)
     `);
   return result.recordset.map((r) => ({ employeeId: r.EmployeeId, employeeCode: r.EmployeeCode, employeeName: r.EmployeeName }));
 }
@@ -660,7 +660,7 @@ function mapCapacityRequestRow(r: {
 
 const CAPACITY_REQUEST_SELECT = `
   SELECT
-    req.RequestId, req.RequestType, req.EmployeeId, e.EmployeeCode, e.FullName AS EmployeeName,
+    req.RequestId, req.RequestType, req.EmployeeId, e.EmployeeCode, COALESCE(e.AliasName, e.FullName) AS EmployeeName,
     CONVERT(VARCHAR(10), req.BusinessDate, 23) AS BusinessDate, req.HoursRequested, req.Reason, req.Status,
     req.RequestedByUserId, requestedByUser.DisplayName AS RequestedByName, req.RequestedAt,
     decidedByUser.DisplayName AS DecidedByName, req.DecidedAt, req.DecisionNotes

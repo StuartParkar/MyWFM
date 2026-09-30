@@ -63,7 +63,9 @@ interface OrgLookupRow {
 }
 
 function toOption(row: OrgLookupRow): LookupOption {
-  return { id: row.employeeId, label: row.aliasName ? `${row.fullName} (${row.aliasName})` : row.fullName };
+  // Alias leads - it's how the floor actually knows this person - with the legal name kept in
+  // parens for anyone cross-referencing HR records.
+  return { id: row.employeeId, label: row.aliasName ? `${row.aliasName} (${row.fullName})` : row.fullName };
 }
 
 export function FilterProvider({ children }: { children: React.ReactNode }) {

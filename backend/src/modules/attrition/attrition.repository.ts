@@ -116,7 +116,7 @@ export async function listJoinersAndExits(from: string, to: string, filters: Dim
     .input("DesignationId", sql.Int, filters.designationId ?? null)
     .input("ProcessId", sql.Int, filters.processId ?? null)
     .query<{ EmployeeId: string; EmployeeCode: string; FullName: string; JoinDate: string | null; LeftDate: string | null }>(`
-      SELECT e.EmployeeId, e.EmployeeCode, e.FullName, CONVERT(VARCHAR(10), e.JoinDate, 23) AS JoinDate, CONVERT(VARCHAR(10), e.LeftDate, 23) AS LeftDate
+      SELECT e.EmployeeId, e.EmployeeCode, COALESCE(e.AliasName, e.FullName) AS FullName, CONVERT(VARCHAR(10), e.JoinDate, 23) AS JoinDate, CONVERT(VARCHAR(10), e.LeftDate, 23) AS LeftDate
       FROM [master].Employee e
       WHERE (e.JoinDate BETWEEN @From AND @To OR e.LeftDate BETWEEN @From AND @To) AND ${EMPLOYEE_DIMENSION_FILTER}
     `);
@@ -165,7 +165,7 @@ export async function listTransfers(from: string, to: string, filters: Dimension
       NewProcessName: string | null;
     }>(`
       SELECT
-        t.EmployeeTransferId, t.EmployeeId, e.EmployeeCode, e.FullName, CONVERT(VARCHAR(10), t.EffectiveDate, 23) AS EffectiveDate,
+        t.EmployeeTransferId, t.EmployeeId, e.EmployeeCode, COALESCE(e.AliasName, e.FullName) AS FullName, CONVERT(VARCHAR(10), t.EffectiveDate, 23) AS EffectiveDate,
         prevDept.DepartmentName AS PreviousDepartmentName, newDept.DepartmentName AS NewDepartmentName,
         prevLoc.LocationName AS PreviousLocationName, newLoc.LocationName AS NewLocationName,
         prevProc.ProcessName AS PreviousProcessName, newProc.ProcessName AS NewProcessName

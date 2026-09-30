@@ -242,7 +242,7 @@ export async function listScheduleAndSessionDays(params: {
         SELECT EmployeeId, BusinessDate FROM SessionDays
       )
       SELECT
-        k.EmployeeId, e.EmployeeCode, e.FullName AS EmployeeName, CONVERT(VARCHAR(10), k.BusinessDate, 23) AS BusinessDate,
+        k.EmployeeId, e.EmployeeCode, COALESCE(e.AliasName, e.FullName) AS EmployeeName, CONVERT(VARCHAR(10), k.BusinessDate, 23) AS BusinessDate,
         sd.ShiftId, sh.ShiftCode,
         CONVERT(VARCHAR(5), sh.StartTime, 108) AS StartTime, CONVERT(VARCHAR(5), sh.EndTime, 108) AS EndTime, sh.IsOvernight,
         ISNULL(sd.IsWeeklyOff, CAST(0 AS BIT)) AS IsWeeklyOff,
@@ -251,7 +251,7 @@ export async function listScheduleAndSessionDays(params: {
       JOIN [master].Employee e ON e.EmployeeId = k.EmployeeId
       LEFT JOIN ScheduledDays sd ON sd.EmployeeId = k.EmployeeId AND sd.BusinessDate = k.BusinessDate
       LEFT JOIN [master].Shift sh ON sh.ShiftId = sd.ShiftId
-      ORDER BY k.BusinessDate DESC, e.FullName
+      ORDER BY k.BusinessDate DESC, COALESCE(e.AliasName, e.FullName)
       OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
     `);
   const totalItems = result.recordset[0]?.TotalCount ?? 0;
