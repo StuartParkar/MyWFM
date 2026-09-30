@@ -19,6 +19,7 @@
     "create-admin": "tsx --env-file=.env src/scripts/createAdmin.ts",
     "import:org-hierarchy": "tsx --env-file=.env src/scripts/importOrgHierarchy.ts",
     "import:calls": "tsx --env-file=.env src/scripts/importCalls.ts",
+    "import:india-roster": "tsx --env-file=.env src/scripts/importIndiaTeamRoster.ts",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
