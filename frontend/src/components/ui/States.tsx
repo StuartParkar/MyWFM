@@ -11,11 +11,11 @@ export function EmptyState({
   icon?: React.ComponentType<{ size?: number | string; className?: string }>;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-line-strong px-6 py-14 text-center">
-      <span className="flex size-10 items-center justify-center rounded-full bg-surface-sunken text-ink-faint">
+    <div className="animate-content-in flex flex-col items-center justify-center rounded-xl border border-dashed border-line-strong px-6 py-14 text-center">
+      <span className="flex size-11 items-center justify-center rounded-full bg-accent-soft text-accent">
         <Icon size={20} />
       </span>
-      <h3 className="mt-3 text-sm font-semibold text-ink">{title}</h3>
+      <h3 className="font-display mt-3 text-base text-ink">{title}</h3>
       <p className="mt-1.5 max-w-sm text-sm text-ink-muted">{description}</p>
     </div>
   );

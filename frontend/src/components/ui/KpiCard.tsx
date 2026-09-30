@@ -16,6 +16,7 @@ export function KpiCard({
   tone,
   hint,
   icon: Icon,
+  colorVar = "--color-accent",
   trend,
   className,
 }: {
@@ -24,25 +25,31 @@ export function KpiCard({
   tone?: BadgeTone;
   hint?: string;
   icon?: React.ComponentType<{ size?: number | string; className?: string }>;
+  /** A CSS color var for the icon badge - pass a --color-section-* var so each tile can carry
+   * its own domain's color rather than every tile wearing the same accent tint. */
+  colorVar?: string;
   trend?: KpiTrend;
   className?: string;
 }) {
   return (
-    <Card interactive className={cn("group", className)}>
+    <Card interactive accentVar={colorVar} className={cn("group", className)}>
       <CardBody>
         <div className="flex items-start justify-between gap-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">{label}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">{label}</p>
           {Icon && (
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent transition-transform duration-[var(--duration-base)] ease-[var(--ease-standard)] group-hover:scale-110">
+            <span
+              className="flex size-7 shrink-0 items-center justify-center rounded-md transition-transform duration-[var(--duration-base)] ease-[var(--ease-spring)] group-hover:scale-110 group-hover:rotate-6"
+              style={{ backgroundColor: `var(${colorVar}-soft)`, color: `var(${colorVar})` }}
+            >
               <Icon size={14} />
             </span>
           )}
         </div>
         <div className="mt-2 flex items-baseline justify-between gap-2">
-          <span className="text-2xl font-semibold text-ink tabular-nums">{value}</span>
+          <span className="text-[1.75rem] leading-none font-semibold text-ink tabular-nums">{value}</span>
           {tone && hint && <Badge tone={tone}>{hint}</Badge>}
         </div>
-        {!tone && hint && <p className="mt-1 text-xs text-ink-muted">{hint}</p>}
+        {!tone && hint && <p className="mt-2 text-xs text-ink-muted">{hint}</p>}
         {trend && (
           <p
             className={cn(

@@ -1,84 +1,127 @@
 @import "tailwindcss";
 
 /*
- * Design tokens - build spec section 52/53: "luxury through precision, not
- * decoration", light-first, and consistent semantic color meaning (green =
- * healthy, amber = warning, red = critical, blue/neutral = informational).
- * Dark mode gets a real (if secondary) palette via prefers-color-scheme,
- * rather than being ignored.
+ * Design tokens - "luxury travel, done properly": warm ink/ivory instead of
+ * cool blue-gray, a bronze/gold accent instead of navy, and a distinct color
+ * per nav section instead of one repeated accent tint. Semantic meaning
+ * (green = healthy, amber = warning, red = critical, blue = informational)
+ * stays fixed regardless of theme. Dark mode gets a real (if secondary)
+ * palette via prefers-color-scheme, rather than being ignored.
  */
 :root {
-  --color-canvas: #f7f8fa;
+  --color-canvas: #faf8f4;
   --color-surface: #ffffff;
   --color-surface-raised: #ffffff;
-  --color-surface-sunken: #f0f2f5;
-  --color-line: #e4e7ec;
-  --color-line-strong: #d0d5dd;
+  --color-surface-sunken: #f2ede4;
+  --color-line: #e8e1d4;
+  --color-line-strong: #d8cdb8;
 
-  --color-ink: #101828;
-  --color-ink-muted: #475467;
-  --color-ink-faint: #98a2b3;
+  --color-ink: #211c15;
+  --color-ink-muted: #5c5346;
+  --color-ink-faint: #a89c87;
 
-  --color-accent: #16305c;
-  --color-accent-strong: #0d1f42;
-  --color-accent-soft: #eef1f7;
+  /* Antique gold/bronze - the brand accent. Warm, not garish. */
+  --color-accent: #a5730f;
+  --color-accent-strong: #7d5610;
+  --color-accent-soft: #faf0dc;
 
-  --color-success: #0a7a4c;
-  --color-success-soft: #e6f6ee;
+  --color-success: #15803d;
+  --color-success-soft: #e9f7ee;
   --color-warning: #b45309;
   --color-warning-soft: #fef3e2;
-  --color-critical: #b42318;
+  --color-critical: #b3261e;
   --color-critical-soft: #fdeceb;
-  --color-info: #1849a9;
-  --color-info-soft: #eaf1fd;
+  --color-info: #1d4ed8;
+  --color-info-soft: #eaf0fd;
 
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
-  --shadow-raised: 0 4px 12px rgba(16, 24, 40, 0.08);
-  /* Elevation scale (additive - shadow-card/raised above are kept as-is so
-     nothing already referencing them changes). */
-  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.07), 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
-  --shadow-lg: 0 12px 24px -6px rgba(16, 24, 40, 0.12), 0 4px 8px -2px rgba(16, 24, 40, 0.06);
+  /* One distinct color per nav section, used for its icon everywhere it appears (sidebar,
+     page headers, empty states) - the "colorful icons" the flat single-accent system never
+     had. Chosen for mutual contrast against both canvas and ink at a glance. */
+  --color-section-workforce: #4f46e5;
+  --color-section-workforce-soft: #eeedfc;
+  --color-section-roster: #7c3aed;
+  --color-section-roster-soft: #f3ecfd;
+  --color-section-intraday: #0d9488;
+  --color-section-intraday-soft: #e3f5f3;
+  --color-section-operations: #ea580c;
+  --color-section-operations-soft: #fdece1;
+  --color-section-reports: #2563eb;
+  --color-section-reports-soft: #e9f0fd;
+  --color-section-data: #0891b2;
+  --color-section-data-soft: #e2f4f8;
+  --color-section-admin: #be185d;
+  --color-section-admin-soft: #fbe8f0;
+  --color-section-system: #57534e;
+  --color-section-system-soft: #eeece9;
 
-  /* Motion - purposeful and quick, not decorative. */
+  --shadow-card: 0 1px 2px rgba(41, 30, 10, 0.05), 0 1px 3px rgba(41, 30, 10, 0.06);
+  --shadow-raised: 0 4px 12px rgba(41, 30, 10, 0.08);
+  --shadow-xs: 0 1px 2px rgba(41, 30, 10, 0.06);
+  --shadow-sm: 0 1px 3px rgba(41, 30, 10, 0.08), 0 1px 2px rgba(41, 30, 10, 0.05);
+  --shadow-md: 0 6px 16px -4px rgba(41, 30, 10, 0.12), 0 2px 6px -2px rgba(41, 30, 10, 0.07);
+  --shadow-lg: 0 16px 32px -8px rgba(41, 30, 10, 0.16), 0 6px 12px -4px rgba(41, 30, 10, 0.08);
+  --shadow-glow-accent: 0 0 0 1px rgba(165, 115, 15, 0.16), 0 8px 24px -6px rgba(165, 115, 15, 0.35);
+
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --duration-fast: 120ms;
-  --duration-base: 200ms;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 140ms;
+  --duration-base: 240ms;
+  --duration-slow: 420ms;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-canvas: #0b0f19;
-    --color-surface: #111726;
-    --color-surface-raised: #161d2e;
-    --color-surface-sunken: #080b12;
-    --color-line: #232b3d;
-    --color-line-strong: #2e3750;
+    --color-canvas: #16130d;
+    --color-surface: #201b13;
+    --color-surface-raised: #292217;
+    --color-surface-sunken: #0f0d09;
+    --color-line: #382f20;
+    --color-line-strong: #4a3d28;
 
-    --color-ink: #f0f2f5;
-    --color-ink-muted: #9aa4b8;
-    --color-ink-faint: #64708a;
+    --color-ink: #f4ede0;
+    --color-ink-muted: #b7a892;
+    --color-ink-faint: #7d7060;
 
-    --color-accent: #7b93c9;
-    --color-accent-strong: #a9bce3;
-    --color-accent-soft: #1a2438;
+    --color-accent: #d9a441;
+    --color-accent-strong: #eec06b;
+    --color-accent-soft: #332810;
 
-    --color-success: #3fbe83;
-    --color-success-soft: #10281f;
+    --color-success: #46c17a;
+    --color-success-soft: #112c1c;
     --color-warning: #e2a13d;
-    --color-warning-soft: #2b2010;
-    --color-critical: #e5675f;
-    --color-critical-soft: #2c1615;
-    --color-info: #6f9de8;
-    --color-info-soft: #16233a;
+    --color-warning-soft: #2e2110;
+    --color-critical: #ea6f66;
+    --color-critical-soft: #33150f;
+    --color-info: #6d94ef;
+    --color-info-soft: #151f38;
 
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
-    --shadow-raised: 0 8px 20px rgba(0, 0, 0, 0.45);
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 10px -2px rgba(0, 0, 0, 0.45), 0 2px 6px -2px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 16px 32px -8px rgba(0, 0, 0, 0.55), 0 6px 12px -3px rgba(0, 0, 0, 0.4);
+    --color-section-workforce: #8b85f0;
+    --color-section-workforce-soft: #211f3a;
+    --color-section-roster: #b28cf5;
+    --color-section-roster-soft: #2a2040;
+    --color-section-intraday: #4fc2b5;
+    --color-section-intraday-soft: #10302c;
+    --color-section-operations: #f28a4f;
+    --color-section-operations-soft: #3a2413;
+    --color-section-reports: #7ba1f5;
+    --color-section-reports-soft: #182741;
+    --color-section-data: #4fc4dd;
+    --color-section-data-soft: #10313a;
+    --color-section-admin: #ec6ba0;
+    --color-section-admin-soft: #3a1928;
+    --color-section-system: #ab9f8c;
+    --color-section-system-soft: #2a271f;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.45);
+    --shadow-raised: 0 8px 20px rgba(0, 0, 0, 0.5);
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 6px 18px -4px rgba(0, 0, 0, 0.5), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 20px 36px -10px rgba(0, 0, 0, 0.6), 0 8px 16px -4px rgba(0, 0, 0, 0.45);
+    --shadow-glow-accent: 0 0 0 1px rgba(217, 164, 65, 0.25), 0 8px 28px -4px rgba(217, 164, 65, 0.35);
   }
 }
 
@@ -107,7 +150,25 @@
   --color-info: var(--color-info);
   --color-info-soft: var(--color-info-soft);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --color-section-workforce: var(--color-section-workforce);
+  --color-section-workforce-soft: var(--color-section-workforce-soft);
+  --color-section-roster: var(--color-section-roster);
+  --color-section-roster-soft: var(--color-section-roster-soft);
+  --color-section-intraday: var(--color-section-intraday);
+  --color-section-intraday-soft: var(--color-section-intraday-soft);
+  --color-section-operations: var(--color-section-operations);
+  --color-section-operations-soft: var(--color-section-operations-soft);
+  --color-section-reports: var(--color-section-reports);
+  --color-section-reports-soft: var(--color-section-reports-soft);
+  --color-section-data: var(--color-section-data);
+  --color-section-data-soft: var(--color-section-data-soft);
+  --color-section-admin: var(--color-section-admin);
+  --color-section-admin-soft: var(--color-section-admin-soft);
+  --color-section-system: var(--color-section-system);
+  --color-section-system-soft: var(--color-section-system-soft);
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-playfair), ui-serif, Georgia, serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
@@ -120,6 +181,12 @@ body {
   border-color: var(--color-line);
 }
 
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
 /* Tabular figures for KPI numbers, so digits don't jitter in width as they
    change. Also carries the mono "instrument panel" treatment - every KPI
    figure in the app already wears this class, so this one rule is what
@@ -129,30 +196,38 @@ body {
   font-family: var(--font-mono);
 }
 
-/* Purposeful, quick entrance for page content - not a decorative flourish,
-   just enough to make navigation feel considered rather than instant/jarring. */
+/* Page-content entrance - a touch more presence than a plain fade, still quick. */
 @keyframes content-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px) scale(0.995);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 .animate-content-in {
   animation: content-in var(--duration-base) var(--ease-standard);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .animate-content-in {
-    animation: none;
+/* Staggered entrance for grids of cards (KPI tiles, list rows) - each child animates in
+   slightly after the previous one via its own --stagger-delay custom property. */
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
+.animate-stagger-in {
+  animation: stagger-in var(--duration-slow) var(--ease-standard) backwards;
+  animation-delay: var(--stagger-delay, 0ms);
+}
 
-/* Loading-skeleton shimmer, replacing a flat opacity pulse with a moving
-   highlight - reads as "actively fetching" rather than just "dimmed". */
 @keyframes shimmer {
   from {
     background-position: 200% 0;
@@ -167,7 +242,41 @@ body {
   animation: shimmer 1.6s ease-in-out infinite;
 }
 
+/* Slow ambient drift for a decorative gradient-mesh background (login, empty states) -
+   large, slow, never distracting. */
+@keyframes mesh-drift {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(-2%, 2%) rotate(3deg);
+  }
+}
+.animate-mesh-drift {
+  animation: mesh-drift 22s var(--ease-standard) infinite;
+}
+
+/* Soft pulsing glow for a brand mark / primary CTA - draws the eye once, gently, not a
+   constant distraction (a single ring, breathing). */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(165, 115, 15, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(165, 115, 15, 0);
+  }
+}
+.animate-glow-pulse {
+  animation: glow-pulse 2.6s var(--ease-standard) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .animate-content-in,
+  .animate-stagger-in,
+  .animate-mesh-drift,
+  .animate-glow-pulse {
+    animation: none;
+  }
   .animate-shimmer {
     animation: none;
     background: var(--color-surface-sunken);

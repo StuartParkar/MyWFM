@@ -5,10 +5,11 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 type ButtonSize = "sm" | "md" | "lg";
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-white shadow-[var(--shadow-xs)] hover:bg-accent-strong hover:shadow-[var(--shadow-sm)]",
-  secondary: "border border-line-strong bg-surface text-ink hover:border-ink-faint hover:bg-canvas",
-  ghost: "text-ink-muted hover:bg-accent-soft hover:text-ink",
-  danger: "bg-critical text-white shadow-[var(--shadow-xs)] hover:opacity-90",
+  primary:
+    "bg-[linear-gradient(135deg,var(--color-accent),var(--color-accent-strong))] text-white shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-glow-accent)] active:translate-y-0",
+  secondary: "border border-line-strong bg-surface text-ink hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[var(--shadow-sm)] active:translate-y-0",
+  ghost: "text-ink-muted hover:bg-accent-soft hover:text-accent",
+  danger: "bg-critical text-white shadow-[var(--shadow-xs)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] hover:opacity-95 active:translate-y-0",
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
@@ -42,11 +43,11 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex select-none items-center justify-center whitespace-nowrap font-medium",
-        "transition-[background-color,border-color,box-shadow,opacity] duration-[var(--duration-fast)] ease-[var(--ease-standard)]",
+        "inline-flex select-none items-center justify-center whitespace-nowrap font-semibold",
+        "transition-[transform,background-color,border-color,box-shadow,opacity] duration-[var(--duration-base)] ease-[var(--ease-spring)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
-        "active:scale-[0.98]",
-        (disabled || loading) && "cursor-not-allowed opacity-50 active:scale-100",
+        "active:scale-[0.97]",
+        (disabled || loading) && "cursor-not-allowed opacity-50 hover:translate-y-0 hover:shadow-none active:scale-100",
         SIZE_CLASSES[size],
         VARIANT_CLASSES[variant],
         className,

@@ -10,14 +10,16 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 /** Styled wrapper around a native <input> - adds an optional label and leading icon. */
 export function Input({ label, icon: Icon, className, ...props }: InputProps) {
   const control = (
-    <div className={cn("relative", !label && className)}>
-      {Icon && <Icon size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />}
+    <div className={cn("group relative", !label && className)}>
+      {Icon && (
+        <Icon size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint transition-colors duration-[var(--duration-fast)] group-focus-within:text-accent" />
+      )}
       <input
         className={cn(
-          "h-9 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink placeholder:text-ink-faint",
+          "h-9 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm font-medium text-ink placeholder:font-normal placeholder:text-ink-faint",
           Icon && "pl-9",
           "transition-[border-color,box-shadow] duration-[var(--duration-fast)] ease-[var(--ease-standard)]",
-          "hover:border-ink-faint focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
+          "hover:border-accent/40 focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
           "disabled:cursor-not-allowed disabled:border-line disabled:bg-canvas disabled:text-ink-faint",
         )}
         {...props}
@@ -27,8 +29,8 @@ export function Input({ label, icon: Icon, className, ...props }: InputProps) {
 
   if (!label) return control;
   return (
-    <label className={cn("flex flex-col gap-1.5", className)}>
-      <span className="text-xs font-medium text-ink-muted">{label}</span>
+    <label className={cn("group/field flex flex-col gap-1.5", className)}>
+      <span className="text-xs font-semibold text-ink-muted transition-colors duration-[var(--duration-fast)] group-focus-within/field:text-accent">{label}</span>
       {control}
     </label>
   );

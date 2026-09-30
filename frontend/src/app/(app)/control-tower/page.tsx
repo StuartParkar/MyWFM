@@ -58,41 +58,58 @@ interface LedgerRow {
 
 type KpiKey = keyof ControlTowerSummary;
 
-const KPI_CONFIG: { key: KpiKey; label: string; format: (v: number) => string; icon: LucideIcon; group: "A" | "B" }[] = [
-  { key: "plannedHC", label: "Planned HC", format: (v) => String(v), icon: Users, group: "A" },
-  { key: "presentHC", label: "Present HC", format: (v) => String(v), icon: UserCheck, group: "B" },
-  { key: "requiredHC", label: "Required HC", format: (v) => String(v), icon: UsersRound, group: "A" },
-  { key: "staffingGap", label: "Staffing Gap", format: (v) => (v >= 0 ? `+${v}` : String(v)), icon: Scale, group: "A" },
-  { key: "coveragePct", label: "Coverage", format: (v) => `${v}%`, icon: ShieldCheck, group: "A" },
-  { key: "calls", label: "Calls", format: (v) => String(v), icon: Phone, group: "A" },
-  { key: "ahtSeconds", label: "AHT", format: (v) => `${v}s`, icon: Timer, group: "A" },
-  { key: "serviceLevelPct", label: "Service Level", format: (v) => `${v}%`, icon: Gauge, group: "A" },
-  { key: "abandonRatePct", label: "Abandon Rate", format: (v) => `${v}%`, icon: PhoneMissed, group: "A" },
-  { key: "occupancyPct", label: "Occupancy", format: (v) => `${v}%`, icon: Activity, group: "A" },
-  { key: "shrinkagePct", label: "Shrinkage", format: (v) => `${v}%`, icon: TrendingDown, group: "B" },
-  { key: "attendancePct", label: "Attendance", format: (v) => `${v}%`, icon: CalendarCheck, group: "B" },
+const KPI_CONFIG: { key: KpiKey; label: string; format: (v: number) => string; icon: LucideIcon; colorVar: string; group: "A" | "B" }[] = [
+  { key: "plannedHC", label: "Planned HC", format: (v) => String(v), icon: Users, colorVar: "--color-section-workforce", group: "A" },
+  { key: "presentHC", label: "Present HC", format: (v) => String(v), icon: UserCheck, colorVar: "--color-section-intraday", group: "B" },
+  { key: "requiredHC", label: "Required HC", format: (v) => String(v), icon: UsersRound, colorVar: "--color-section-roster", group: "A" },
+  { key: "staffingGap", label: "Staffing Gap", format: (v) => (v >= 0 ? `+${v}` : String(v)), icon: Scale, colorVar: "--color-accent", group: "A" },
+  { key: "coveragePct", label: "Coverage", format: (v) => `${v}%`, icon: ShieldCheck, colorVar: "--color-section-reports", group: "A" },
+  { key: "calls", label: "Calls", format: (v) => String(v), icon: Phone, colorVar: "--color-section-operations", group: "A" },
+  { key: "ahtSeconds", label: "AHT", format: (v) => `${v}s`, icon: Timer, colorVar: "--color-section-data", group: "A" },
+  { key: "serviceLevelPct", label: "Service Level", format: (v) => `${v}%`, icon: Gauge, colorVar: "--color-section-intraday", group: "A" },
+  { key: "abandonRatePct", label: "Abandon Rate", format: (v) => `${v}%`, icon: PhoneMissed, colorVar: "--color-section-operations", group: "A" },
+  { key: "occupancyPct", label: "Occupancy", format: (v) => `${v}%`, icon: Activity, colorVar: "--color-section-workforce", group: "A" },
+  { key: "shrinkagePct", label: "Shrinkage", format: (v) => `${v}%`, icon: TrendingDown, colorVar: "--color-section-admin", group: "B" },
+  { key: "attendancePct", label: "Attendance", format: (v) => `${v}%`, icon: CalendarCheck, colorVar: "--color-section-roster", group: "B" },
 ];
 
-function KpiTile({ label, kpi, format, icon: Icon, onExplain }: { label: string; kpi: Kpi; format: (v: number) => string; icon: LucideIcon; onExplain?: () => void }) {
+function KpiTile({
+  label,
+  kpi,
+  format,
+  icon: Icon,
+  colorVar,
+  onExplain,
+}: {
+  label: string;
+  kpi: Kpi;
+  format: (v: number) => string;
+  icon: LucideIcon;
+  colorVar: string;
+  onExplain?: () => void;
+}) {
   const explainable = kpi.formulaCode !== null && kpi.value !== null;
   return (
-    <Card interactive className="group">
+    <Card interactive accentVar={colorVar} className="group">
       <CardBody>
         <div className="flex items-start justify-between gap-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">{label}</p>
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent transition-transform duration-[var(--duration-base)] ease-[var(--ease-standard)] group-hover:scale-110">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">{label}</p>
+          <span
+            className="flex size-7 shrink-0 items-center justify-center rounded-md transition-transform duration-[var(--duration-base)] ease-[var(--ease-spring)] group-hover:scale-110 group-hover:rotate-6"
+            style={{ backgroundColor: `var(${colorVar}-soft)`, color: `var(${colorVar})` }}
+          >
             <Icon size={14} />
           </span>
         </div>
         <div className="mt-2 flex items-baseline justify-between gap-2">
-          <span className="text-2xl font-semibold text-ink tabular-nums">{kpi.value == null ? "—" : format(kpi.value)}</span>
+          <span className="text-[1.75rem] leading-none font-semibold text-ink tabular-nums">{kpi.value == null ? "—" : format(kpi.value)}</span>
         </div>
         {explainable ? (
-          <button type="button" onClick={onExplain} className="mt-1 text-xs font-medium text-accent hover:underline">
+          <button type="button" onClick={onExplain} className="mt-2 text-xs font-semibold text-accent hover:underline">
             Explain this number
           </button>
         ) : (
-          <p className="mt-1 text-xs text-ink-faint">{kpi.value == null ? "No data in range" : "Real count - no formula to explain"}</p>
+          <p className="mt-2 text-xs text-ink-faint">{kpi.value == null ? "No data in range" : "Real count - no formula to explain"}</p>
         )}
       </CardBody>
     </Card>
@@ -139,7 +156,7 @@ export default function ControlTowerPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-lg font-semibold text-ink">Control Tower</h1>
+        <h1 className="font-display text-2xl text-ink">Control Tower</h1>
         <p className="mt-1 text-sm text-ink-muted">
           {filters.dateRange.startDate === filters.dateRange.endDate ? `Business date: ${filters.dateRange.startDate}` : `Range: ${filters.dateRange.startDate} → ${filters.dateRange.endDate}`}
           {" · "}Designation: {filters.designation}. Present HC/Attendance/Shrinkage respect the full HOD/TL/Agent-Senior/Designation cascade above; every other card is
@@ -152,8 +169,10 @@ export default function ControlTowerPage() {
       {!loading && error && <ErrorState message={error} onRetry={reload} />}
       {!loading && !error && summary && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {KPI_CONFIG.map(({ key, label, format, icon }) => (
-            <KpiTile key={key} label={label} kpi={summary[key]} format={format} icon={icon} onExplain={() => setExplainCode(summary[key].formulaCode)} />
+          {KPI_CONFIG.map(({ key, label, format, icon, colorVar }, i) => (
+            <div key={key} className="animate-stagger-in" style={{ "--stagger-delay": `${i * 35}ms` } as React.CSSProperties}>
+              <KpiTile label={label} kpi={summary[key]} format={format} icon={icon} colorVar={colorVar} onExplain={() => setExplainCode(summary[key].formulaCode)} />
+            </div>
           ))}
         </div>
       )}

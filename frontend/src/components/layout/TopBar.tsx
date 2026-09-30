@@ -41,16 +41,19 @@ export function TopBar() {
   const pageTitle = findNavLeaf(pathname)?.label ?? "Universal MyWFM";
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-line bg-surface px-6">
-      <h1 className="text-sm font-semibold text-ink">{pageTitle}</h1>
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-line bg-surface px-6">
+      <h1 className="font-display text-xl text-ink">{pageTitle}</h1>
       {user && (
         <div className="relative" ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-canvas"
+            className="group flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:bg-canvas"
           >
-            <span className="flex size-8 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white">
+            <span
+              className="flex size-8 items-center justify-center rounded-full text-xs font-semibold text-white shadow-[var(--shadow-xs)] transition-transform duration-[var(--duration-base)] ease-[var(--ease-spring)] group-hover:scale-110"
+              style={{ backgroundImage: "linear-gradient(135deg, var(--color-accent), var(--color-accent-strong))" }}
+            >
               {initials(user.displayName)}
             </span>
             <ChevronDown size={14} className={cn("text-ink-faint transition-transform duration-[var(--duration-fast)]", menuOpen && "rotate-180")} />
