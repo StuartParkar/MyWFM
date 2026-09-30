@@ -52,6 +52,24 @@ export async function listCallMetricsRaw(params: {
       AnsweredWithinThreshold: number;
       ImportRunIds: string | null;
     }>(`
+      -- STRING_AGG has no DISTINCT argument in T-SQL (unlike Postgres) - dedupe
+      -- ImportRunId per (BusinessDate, QueueId) in its own CTE first, then
+      -- STRING_AGG that, rather than passing DISTINCT to STRING_AGG itself
+      -- (a syntax error: "Incorrect syntax near ','" - found running against a
+      -- real server).
+      WITH DistinctImportRuns AS (
+        SELECT DISTINCT q.BusinessDate, q.QueueId, q.ImportRunId
+        FROM [calls].QueueIntervalCall q
+        LEFT JOIN [master].Queue mq ON mq.QueueId = q.QueueId
+        WHERE q.BusinessDate BETWEEN @From AND @To
+          AND (@QueueId IS NULL OR q.QueueId = @QueueId)
+          AND (@ProcessId IS NULL OR mq.ProcessId = @ProcessId)
+      ),
+      ImportRunAgg AS (
+        SELECT BusinessDate, QueueId, STRING_AGG(CAST(ImportRunId AS VARCHAR(20)), ',') AS ImportRunIds
+        FROM DistinctImportRuns
+        GROUP BY BusinessDate, QueueId
+      )
       SELECT
         CONVERT(VARCHAR(10), q.BusinessDate, 23) AS BusinessDate,
         q.QueueId, mq.QueueName, mq.ProcessId, mp.ProcessName,
@@ -62,10 +80,11 @@ export async function listCallMetricsRaw(params: {
               THEN COALESCE(q.HandleSeconds, q.TalkSeconds + ISNULL(q.HoldSeconds, 0) + ISNULL(q.ACWSeconds, 0))
               ELSE 0 END) AS AnsweredHandleSecondsSum,
         SUM(CASE WHEN q.Disposition = 'ANSWERED' AND q.WaitSeconds IS NOT NULL AND q.WaitSeconds <= @Threshold THEN 1 ELSE 0 END) AS AnsweredWithinThreshold,
-        STRING_AGG(DISTINCT CAST(q.ImportRunId AS VARCHAR(20)), ',') AS ImportRunIds
+        MAX(ia.ImportRunIds) AS ImportRunIds
       FROM [calls].QueueIntervalCall q
       LEFT JOIN [master].Queue mq ON mq.QueueId = q.QueueId
       LEFT JOIN [master].Process mp ON mp.ProcessId = mq.ProcessId
+      LEFT JOIN ImportRunAgg ia ON ia.BusinessDate = q.BusinessDate AND ia.QueueId = q.QueueId
       WHERE q.BusinessDate BETWEEN @From AND @To
         AND (@QueueId IS NULL OR q.QueueId = @QueueId)
         AND (@ProcessId IS NULL OR mq.ProcessId = @ProcessId)
