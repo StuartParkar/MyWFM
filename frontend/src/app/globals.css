@@ -5,8 +5,8 @@
  * cool blue-gray, a bronze/gold accent instead of navy, and a distinct color
  * per nav section instead of one repeated accent tint. Semantic meaning
  * (green = healthy, amber = warning, red = critical, blue = informational)
- * stays fixed regardless of theme. Dark mode gets a real (if secondary)
- * palette via prefers-color-scheme, rather than being ignored.
+ * stays fixed. Light-only by deliberate choice - no prefers-color-scheme
+ * dark variant.
  */
 :root {
   --color-canvas: #faf8f4;
@@ -72,59 +72,6 @@
   --duration-slow: 420ms;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-canvas: #16130d;
-    --color-surface: #201b13;
-    --color-surface-raised: #292217;
-    --color-surface-sunken: #0f0d09;
-    --color-line: #382f20;
-    --color-line-strong: #4a3d28;
-
-    --color-ink: #f4ede0;
-    --color-ink-muted: #b7a892;
-    --color-ink-faint: #7d7060;
-
-    --color-accent: #d9a441;
-    --color-accent-strong: #eec06b;
-    --color-accent-soft: #332810;
-
-    --color-success: #46c17a;
-    --color-success-soft: #112c1c;
-    --color-warning: #e2a13d;
-    --color-warning-soft: #2e2110;
-    --color-critical: #ea6f66;
-    --color-critical-soft: #33150f;
-    --color-info: #6d94ef;
-    --color-info-soft: #151f38;
-
-    --color-section-workforce: #8b85f0;
-    --color-section-workforce-soft: #211f3a;
-    --color-section-roster: #b28cf5;
-    --color-section-roster-soft: #2a2040;
-    --color-section-intraday: #4fc2b5;
-    --color-section-intraday-soft: #10302c;
-    --color-section-operations: #f28a4f;
-    --color-section-operations-soft: #3a2413;
-    --color-section-reports: #7ba1f5;
-    --color-section-reports-soft: #182741;
-    --color-section-data: #4fc4dd;
-    --color-section-data-soft: #10313a;
-    --color-section-admin: #ec6ba0;
-    --color-section-admin-soft: #3a1928;
-    --color-section-system: #ab9f8c;
-    --color-section-system-soft: #2a271f;
-
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.45);
-    --shadow-raised: 0 8px 20px rgba(0, 0, 0, 0.5);
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.35);
-    --shadow-md: 0 6px 18px -4px rgba(0, 0, 0, 0.5), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 20px 36px -10px rgba(0, 0, 0, 0.6), 0 8px 16px -4px rgba(0, 0, 0, 0.45);
-    --shadow-glow-accent: 0 0 0 1px rgba(217, 164, 65, 0.25), 0 8px 28px -4px rgba(217, 164, 65, 0.35);
-  }
-}
-
 @theme inline {
   --color-canvas: var(--color-canvas);
   --color-surface: var(--color-surface);
@@ -168,7 +115,6 @@
   --color-section-system-soft: var(--color-section-system-soft);
 
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-playfair), ui-serif, Georgia, serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
@@ -181,10 +127,12 @@ body {
   border-color: var(--color-line);
 }
 
+/* Heading treatment within the single-typeface system: same Manrope as body copy, just bolder
+   and tighter - headings read as considered without introducing a second typeface. */
 .font-display {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.015em;
 }
 
 /* Tabular figures for KPI numbers, so digits don't jitter in width as they

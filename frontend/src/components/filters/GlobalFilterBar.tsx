@@ -1,28 +1,10 @@
 "use client";
 
 import { RotateCcw } from "lucide-react";
-import { DATE_RANGE_PRESETS, type DateRangePreset } from "@mywfm/shared";
 import { useFilters, type LookupOption } from "@/lib/filters/FilterContext";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
-
-const PRESET_LABELS: Record<Exclude<DateRangePreset, "CUSTOM">, string> = {
-  YESTERDAY: "Yesterday",
-  TODAY: "Today",
-  LAST_7_DAYS: "Last 7 Days",
-  LAST_14_DAYS: "Last 14 Days",
-  LAST_30_DAYS: "Last 30 Days",
-  THIS_WEEK: "This Week",
-  LAST_WEEK: "Last Week",
-  THIS_MONTH: "This Month",
-  LAST_MONTH: "Last Month",
-};
-
-// "Custom Range" is a real value resolveDateRangePreset() supports, but no
-// screen has a custom-range date-picker UI yet - offering it here with
-// nothing behind it would be exactly the kind of half-finished feature build
-// spec section 78 rules out. Add it back once a screen builds that picker.
-const SELECTABLE_PRESETS = DATE_RANGE_PRESETS.filter((p): p is Exclude<DateRangePreset, "CUSTOM"> => p !== "CUSTOM");
+import { DateRangePicker } from "./DateRangePicker";
 
 function SelectField({
   label,
@@ -76,22 +58,11 @@ export function GlobalFilterBar() {
 
   return (
     <div className="flex flex-wrap items-end gap-4 border-b border-line bg-surface px-6 py-3">
-      <Select
-        label="Date Range"
-        value={filters.dateRange.preset}
-        onChange={(e) => setDateRangePreset(e.target.value as DateRangePreset)}
-      >
-        {SELECTABLE_PRESETS.map((preset) => (
-          <option key={preset} value={preset}>
-            {PRESET_LABELS[preset]}
-          </option>
-        ))}
-      </Select>
-      <span className="pb-2 text-xs text-ink-faint tabular-nums">
-        {filters.dateRange.startDate === filters.dateRange.endDate
-          ? filters.dateRange.startDate
-          : `${filters.dateRange.startDate} → ${filters.dateRange.endDate}`}
-      </span>
+      <DateRangePicker
+        value={filters.dateRange}
+        onSelectPreset={(preset) => setDateRangePreset(preset)}
+        onApplyCustom={(startDate, endDate) => setDateRangePreset("CUSTOM", { startDate, endDate })}
+      />
 
       <SelectField label="HOD" value={filters.hod} options={hodOptions} onChange={setHod} />
       <SelectField
