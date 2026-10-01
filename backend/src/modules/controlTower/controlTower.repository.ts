@@ -122,7 +122,8 @@ export async function listScheduledEmployees(params: ControlTowerFilters): Promi
         pr.IsWeeklyOff,
         CAST(CASE WHEN EXISTS (SELECT 1 FROM [attendance].AttendanceSession att WHERE att.EmployeeId = pr.EmployeeId AND att.BusinessDate = pr.BusinessDate) THEN 1 ELSE 0 END AS BIT) AS IsPresent
       FROM [roster].PublishedRoster pr
-      JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
+      -- LEFT JOIN: a directly-published roster row (e.g. importIndiaTeamRoster.ts) has no RosterRequirementId at all and must still surface here.
+      LEFT JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
       JOIN [master].Employee e ON e.EmployeeId = pr.EmployeeId
       LEFT JOIN [master].Designation d ON d.DesignationId = e.DesignationId
       LEFT JOIN [master].Shift sh ON sh.ShiftId = pr.ShiftId

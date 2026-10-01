@@ -65,7 +65,8 @@ export async function listScheduledEmployeeWindows(params: { businessDate: strin
     .query<{ EmployeeId: string; ShiftId: number | null; StartTime: string | null; EndTime: string | null; IsOvernight: boolean | null; IsWeeklyOff: boolean }>(`
       SELECT pr.EmployeeId, pr.ShiftId, CONVERT(VARCHAR(5), sh.StartTime, 108) AS StartTime, CONVERT(VARCHAR(5), sh.EndTime, 108) AS EndTime, sh.IsOvernight, pr.IsWeeklyOff
       FROM [roster].PublishedRoster pr
-      JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
+      -- LEFT JOIN: a directly-published roster row (e.g. importIndiaTeamRoster.ts) has no RosterRequirementId at all and must still be counted as scheduled.
+      LEFT JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
       LEFT JOIN [master].Shift sh ON sh.ShiftId = pr.ShiftId
       WHERE pr.IsActive = 1 AND pr.BusinessDate = @BusinessDate
         AND (@ProcessId IS NULL OR rr.ProcessId = @ProcessId)
@@ -277,7 +278,8 @@ export async function listScheduledEmployeesForDate(params: { businessDate: stri
     .query<{ EmployeeId: string; EmployeeCode: string; EmployeeName: string }>(`
       SELECT DISTINCT pr.EmployeeId, e.EmployeeCode, COALESCE(e.AliasName, e.FullName) AS EmployeeName
       FROM [roster].PublishedRoster pr
-      JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
+      -- LEFT JOIN: a directly-published roster row (e.g. importIndiaTeamRoster.ts) has no RosterRequirementId at all and must still appear in this picker.
+      LEFT JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
       JOIN [master].Employee e ON e.EmployeeId = pr.EmployeeId
       WHERE pr.IsActive = 1 AND pr.BusinessDate = @BusinessDate AND pr.IsWeeklyOff = 0
         AND (@ProcessId IS NULL OR rr.ProcessId = @ProcessId)
@@ -567,7 +569,8 @@ export async function getScheduledWindowForEmployee(employeeId: string, business
     .query<{ ProcessId: number | null; ShiftId: number | null; StartTime: string | null; EndTime: string | null; IsOvernight: boolean | null; IsWeeklyOff: boolean }>(`
       SELECT rr.ProcessId, pr.ShiftId, CONVERT(VARCHAR(5), sh.StartTime, 108) AS StartTime, CONVERT(VARCHAR(5), sh.EndTime, 108) AS EndTime, sh.IsOvernight, pr.IsWeeklyOff
       FROM [roster].PublishedRoster pr
-      JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
+      -- LEFT JOIN: a directly-published roster row (e.g. importIndiaTeamRoster.ts) has no RosterRequirementId at all (ProcessId resolves to NULL, per ScheduledWindowForEmployeeRow) and must still resolve a window here.
+      LEFT JOIN [roster].RosterRequirement rr ON rr.RosterRequirementId = pr.RosterRequirementId
       LEFT JOIN [master].Shift sh ON sh.ShiftId = pr.ShiftId
       WHERE pr.IsActive = 1 AND pr.EmployeeId = @EmployeeId AND pr.BusinessDate = @BusinessDate
     `);
